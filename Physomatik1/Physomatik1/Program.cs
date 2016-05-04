@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +10,7 @@ namespace Physomatik1
     {
         static void Main(string[] args)
         {
+            a:
             double[] start = new double[2] { 0, 45 };
             double[] vector = new double[2] { 10, 45 };
             double t = 0;
@@ -19,22 +20,36 @@ namespace Physomatik1
             Console.SetBufferSize(sizex, sizey);
             Console.SetWindowPosition(0, 0);
             Console.CursorVisible = false;
-            double[,] simulated = new double[500, 2];
+            double[,] simulated = new double[100000, 2];
             int pos = 0;
             Console.SetCursorPosition(0, 0);
+            double F = Convert.ToDouble(Console.ReadLine()), a = Convert.ToDouble(Console.ReadLine()), m = 1;
             Console.Write("Simulating...");
-            double step = 0.005;
-            while(pos < simulated.GetLength(0) - 1)
+            double step = 0.001;
+            double[] v = new double[2], posi = new double[2];
+            double[,] vectors;
+            while (pos < simulated.GetLength(0) - 1)
             {
                 try
                 {
 
-                    vector = Physomatik.getPosatShotwithS(200, 30, 1, Physomatik.g, 1, 0.01, Physomatik.Dichte_Luft, t, 1, step);
-                    simulated[pos, 0] = vector[0];
-                    simulated[pos, 1] = vector[1];
-                    Console.SetCursorPosition((int)(vector[0] / 0.1), sizey / 2 - (int)(vector[1] / 0.1));
-                    if (Math.Sqrt(vector[0]*vector[0] + vector[1]*vector[1]) <= 1) Console.ForegroundColor = ConsoleColor.Red;
-                    else Console.ForegroundColor = ConsoleColor.White;
+                    if (Math.Sqrt(posi[0] * posi[0] + posi[1] * posi[1]) <= 1)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        vectors = Physomatik.getnewPos_Speed(new double[2] { F, a}, 1, Physomatik.g, 1, 0.01, Physomatik.Dichte_Luft, step, posi, v);
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.White;
+                        vectors = Physomatik.getnewPos_Speed(new double[2] { 0, 0 }, 1, Physomatik.g, 1, 0.1, Physomatik.Dichte_Luft, step, posi, v);
+                    }
+                    v[0] = vectors[0, 0];
+                    v[1] = vectors[0, 1];
+                    posi[0] = vectors[1, 0];
+                    posi[1] = vectors[1, 1];
+                    simulated[pos, 0] = posi[0];
+                    simulated[pos, 1] = posi[1];
+                    Console.SetCursorPosition((int)(posi[0]/0.1), (int)(sizey/2-posi[1]/0.1));
                     Console.Write("█");
                     pos++;
                     t += step;
@@ -55,7 +70,7 @@ namespace Physomatik1
                     if (Math.Sqrt(simulated[pos,0] * simulated[pos, 0] + simulated[pos, 1] * simulated[pos, 1]) <= 1) Console.ForegroundColor = ConsoleColor.Red;
                     else Console.ForegroundColor = ConsoleColor.White;
                     Console.Write("█");
-                    System.Threading.Thread.Sleep(10);
+                    System.Threading.Thread.Sleep((int)(step*1000));
                     pos++;
                 }
                 catch
@@ -64,6 +79,8 @@ namespace Physomatik1
                 }
             }
             Console.ReadLine();
+            Console.Clear();
+            goto a;
         }
     }
 
@@ -123,6 +140,14 @@ namespace Physomatik1
                 v = getnewSpeed(v, F_res, step, m);
             }
             return v;
+        }
+
+        public static double[,] getnewPos_Speed(double[] F_Wurf, double m, double g, double c_w, double A, double P, double step, double[] oldpos, double[] oldv)
+        {
+            double[,] vectors = new double[3, 2] { { F_Wurf[0], F_Wurf[1] }, { getF_G(m, g), 270 }, { getF_L(c_w, A, P, oldv[0]), (oldv[1] + 180) % 360 } };
+            double[] newSpeed = getnewSpeed(oldv, getresVector(vectors), step, m);
+            double[] pos = new double[2] { getxPart(newSpeed) * step + oldpos[0], getyPart(newSpeed) * step + oldpos[1] };
+            return new double[2,2] { { newSpeed[0], newSpeed[1] }, { pos[0], pos[1] } };
         }
 
         public static double getSpeedwithAir(double A, double F, double P, double c_w, double t, double m)
