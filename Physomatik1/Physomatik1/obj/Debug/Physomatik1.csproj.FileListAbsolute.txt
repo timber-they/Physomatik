@@ -1,0 +1,6 @@
+c:\users\timo\documents\visual studio 2015\Projects\Physomatik1\Physomatik1\bin\Debug\Physomatik1.exe.config
+c:\users\timo\documents\visual studio 2015\Projects\Physomatik1\Physomatik1\bin\Debug\Physomatik1.exe
+c:\users\timo\documents\visual studio 2015\Projects\Physomatik1\Physomatik1\bin\Debug\Physomatik1.pdb
+c:\users\timo\documents\visual studio 2015\Projects\Physomatik1\Physomatik1\obj\Debug\Physomatik1.csprojResolveAssemblyReference.cache
+c:\users\timo\documents\visual studio 2015\Projects\Physomatik1\Physomatik1\obj\Debug\Physomatik1.exe
+c:\users\timo\documents\visual studio 2015\Projects\Physomatik1\Physomatik1\obj\Debug\Physomatik1.pdb
