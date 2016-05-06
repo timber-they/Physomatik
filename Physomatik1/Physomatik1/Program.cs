@@ -23,7 +23,7 @@ namespace Physomatik1
             double[,] simulated = new double[100000, 2];
             int pos = 0;
             Console.SetCursorPosition(0, 0);
-            double F = Convert.ToDouble(Console.ReadLine()), a = Convert.ToDouble(Console.ReadLine()), m = 1, f = 0.1, c_w = 1, A = 0.1;
+            double F = Convert.ToDouble(Console.ReadLine()), a = Convert.ToDouble(Console.ReadLine()), m = 1, f = 0.1, c_w = 1, A = 0.1, s = 10;
             Console.Write("Simulating...");
             double step = 0.001;
             double[] v = new double[2] { 0, a }, posi = new double[2];
@@ -32,7 +32,7 @@ namespace Physomatik1
             {
                 try
                 {
-                    if (Math.Sqrt(posi[0]*posi[0]+posi[1]*posi[1]) < 10)
+                    if (Math.Sqrt(posi[0]*posi[0]+posi[1]*posi[1]) < s)
                     {
                         Console.ForegroundColor = ConsoleColor.Red;
                         vectors = Physomatik.getnewPos_SpeedatHill(f, a, m, Physomatik.g, F, step, v, c_w, A, Physomatik.Density_Air, posi);
@@ -66,7 +66,7 @@ namespace Physomatik1
                 {
 
                     Console.SetCursorPosition((int)(sizex / 2 + (simulated[pos, 0]) / 1), (int)(sizey / 2 - (simulated[pos, 1]) / 1));
-                    if (Math.Sqrt(simulated[pos,0] * simulated[pos, 0] + simulated[pos,1] * simulated[pos,1]) < 10) Console.ForegroundColor = ConsoleColor.Red;
+                    if (Math.Sqrt(simulated[pos,0] * simulated[pos, 0] + simulated[pos,1] * simulated[pos,1]) < s) Console.ForegroundColor = ConsoleColor.Red;
                     else Console.ForegroundColor = ConsoleColor.White;
                     Console.Write("█");
                     System.Threading.Thread.Sleep((int)(step*1000));
