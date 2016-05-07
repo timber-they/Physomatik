@@ -34,11 +34,15 @@ namespace Physomatik1
                         Console.ForegroundColor = ConsoleColor.Red;
                         vectors = Physomatik.getnewPos_SpeedatHill(f, a, m, Physomatik.g, F, step, v, c_w, A, Physomatik.Density_Air, posi);
                     }
-                    else
+                    else if(sizey / 2 - posi[1] < sizey - 10)
                     {
                         Console.ForegroundColor = ConsoleColor.White;
                         vectors = Physomatik.getnewPos_Speed(new double[2] { 0, 0 }, m, Physomatik.g, c_w, A, Physomatik.Density_Air, step, posi, v);
                         ground = false;
+                    }
+                    else
+                    {
+                        vectors = new double[2, 2] { { Physomatik.getnewPos(v, posi, step)[0], Physomatik.getnewPos(v, posi, step)[1] }, { Physomatik.getnewSpeedafterImpact(v, step, c_w, A, Physomatik.Density_Air, m, Physomatik.g, 0.1, f)[0], Physomatik.getnewSpeedafterImpact(v, step, c_w, A, Physomatik.Density_Air, m, Physomatik.g, 0.1, f)[1] } };
                     }
                     v[0] = vectors[1, 0];
                     v[1] = vectors[1, 1];
@@ -195,6 +199,22 @@ namespace Physomatik1
             return a * dt;
         } //this one is obvious
 
+        public static double[] getnewSpeedafterImpact(double[] v0,  double step, double c_w, double A, double P, double m, double g, double t, double f)
+        {
+            double vx = getxPart(v0), vy = getyPart(v0);
+            double F_N = getF_G(m, g) + getF(vy, t, m);
+            if(vx > 0)
+                vx += geta(-f * F_N - getF_L(c_w, A, P, vx), m) * step;
+            else
+                vx += geta(+f * F_N + getF_L(c_w, A, P, vx), m) * step;
+            return getresVector(new double[2,2] { { vx, 0 }, { 0, 90 } });
+        }
+
+        public static double[] getnewPos(double[] v, double[] pos, double step)
+        {
+            return new double[2] { pos[0] + getxPart(v) * step, pos[1] + getyPart(v) * step };
+        }
+
         #region getF
         public static double getF_G(double m, double g) //return the fitting Fs
         {
@@ -271,12 +291,20 @@ namespace Physomatik1
         {
             return v0 + getDeltaSpeed(a, dt);
         }
+
         #endregion
+
+        #region FAM
+        public static double getF(double v, double t, double m)
+        {
+            return (v / t) * m;
+        }
 
         public static double geta(double F, double m)
         {
             return F / m;
         }
+        #endregion
 
         #region getPart
         public static double getyPart(double[] vector) //returns the y-/x-Part
