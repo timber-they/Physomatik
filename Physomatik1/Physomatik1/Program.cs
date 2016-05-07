@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Physomatik1
 {
@@ -23,16 +19,17 @@ namespace Physomatik1
             double[,] simulated = new double[100000, 2];
             int pos = 0;
             Console.SetCursorPosition(0, 0);
-            double F = Convert.ToDouble(Console.ReadLine()), a = Convert.ToDouble(Console.ReadLine()), m = 1, f = 0.1, c_w = 1, A = 0.1, s = 10;
+            double F = Convert.ToDouble(Console.ReadLine()), a = Convert.ToDouble(Console.ReadLine()), m = 10, f = 0.1, c_w = 1, A = 0.1, s = 10;
             Console.Write("Simulating...");
             double step = 0.001;
             double[] v = new double[2] { 0, a }, posi = new double[2];
             double[,] vectors;
+            bool ground = true;
             while (pos < simulated.GetLength(0) - 1)
             {
                 try
                 {
-                    if (Math.Sqrt(posi[0]*posi[0]+posi[1]*posi[1]) < s)
+                    if (Math.Sqrt(posi[0]*posi[0]+posi[1]*posi[1]) < s && ground)
                     {
                         Console.ForegroundColor = ConsoleColor.Red;
                         vectors = Physomatik.getnewPos_SpeedatHill(f, a, m, Physomatik.g, F, step, v, c_w, A, Physomatik.Density_Air, posi);
@@ -41,6 +38,7 @@ namespace Physomatik1
                     {
                         Console.ForegroundColor = ConsoleColor.White;
                         vectors = Physomatik.getnewPos_Speed(new double[2] { 0, 0 }, m, Physomatik.g, c_w, A, Physomatik.Density_Air, step, posi, v);
+                        ground = false;
                     }
                     v[0] = vectors[1, 0];
                     v[1] = vectors[1, 1];
@@ -59,6 +57,7 @@ namespace Physomatik1
                 }
             }
             pos = 0;
+            ground = true;
             Console.Clear();
             while(pos < simulated.GetLength(0)-1)
             {
@@ -66,8 +65,12 @@ namespace Physomatik1
                 {
 
                     Console.SetCursorPosition((int)(sizex / 2 + (simulated[pos, 0]) / 1), (int)(sizey / 2 - (simulated[pos, 1]) / 1));
-                    if (Math.Sqrt(simulated[pos,0] * simulated[pos, 0] + simulated[pos,1] * simulated[pos,1]) < s) Console.ForegroundColor = ConsoleColor.Red;
-                    else Console.ForegroundColor = ConsoleColor.White;
+                    if (Math.Sqrt(simulated[pos, 0] * simulated[pos, 0] + simulated[pos, 1] * simulated[pos, 1]) < s && ground) Console.ForegroundColor = ConsoleColor.Red;
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.White;
+                        ground = false;
+                    }
                     Console.Write("█");
                     System.Threading.Thread.Sleep((int)(step*1000));
                     pos++;
@@ -98,11 +101,11 @@ namespace Physomatik1
             {
                 vector[0] = vectors[i, 0];
                 vector[1] = vectors[i, 1];
-                xsum += getxPart(vector);
+                xsum += getxPart(vector); //get the parts...
                 ysum += getyPart(vector);
             }
-            vector[0] = Math.Sqrt(xsum * xsum + ysum * ysum);
-            vector[1] = getresAngle(xsum, ysum);
+            vector[0] = Math.Sqrt(xsum * xsum + ysum * ysum); //and add the parts
+            vector[1] = getresAngle(xsum, ysum); //and get the angle
             if (vector[1] < 0) vector[1] = 360 + vector[1];
             vector[1] %= 360;
             return vector;
@@ -110,7 +113,7 @@ namespace Physomatik1
 
         public static double getresAngle(double x, double y)
         {
-            if (x > 0)
+            if (x > 0) //this is ugly code. But I think, theres no better way to do this
                 return ToDegree(Math.Atan(y / x));
             if (x == 0)
                 return Math.Sign(y) * 90;
@@ -123,7 +126,8 @@ namespace Physomatik1
         }
         #endregion
 
-        public static double[] getSpeedatShot(double F_Wurf,double angle_Wurf, double m, double g, double c_w, double A, double P, double t, double t_throw, double step)
+        #region Shot
+        public static double[] getSpeedatShot(double F_Wurf,double angle_Wurf, double m, double g, double c_w, double A, double P, double t, double t_throw, double step) //you should use this part if you forgot your current position/speed
         {
             double F_G = getF_G(m, g), F_L = 0;
             double[] v = new double[2] { 0, 0 }, F_res = new double[2];
@@ -141,34 +145,24 @@ namespace Physomatik1
             return v;
         }
 
-        public static double[,] getnewPos_Speed(double[] F_Wurf, double m, double g, double c_w, double A, double P, double step, double[] oldpos, double[] oldv)
+        public static double[] getPosatShot(double F_Wurf, double angle_Wurf, double m, double g, double c_w, double A, double P, double t, double t_throw, double step)
+        {
+            double[] pos = new double[2], speed = new double[2];
+            for (double i = 0; i < t; i += step)
+            {
+                speed = getSpeedatShot(F_Wurf, angle_Wurf, m, g, c_w, A, P, i, t_throw, step);
+                pos[0] += getxPart(speed) * step;
+                pos[1] += getyPart(speed) * step;
+            }
+            return pos;
+        } //as well as this
+
+        public static double[,] getnewPos_Speed(double[] F_Wurf, double m, double g, double c_w, double A, double P, double step, double[] oldpos, double[] oldv) //this gives you a new position/speed - it's stepwise because air is bad
         {
             double[,] vectors = new double[3, 2] { { F_Wurf[0], F_Wurf[1] }, { getF_G(m, g), 270 }, { getF_L(c_w, A, P, oldv[0]), (oldv[1] + 180) % 360 } };
             double[] newSpeed = getnewSpeed(oldv, getresVector(vectors), step, m);
             double[] pos = new double[2] { getxPart(newSpeed) * step + oldpos[0], getyPart(newSpeed) * step + oldpos[1] };
             return new double[2,2] { { pos[0], pos[1] },{ newSpeed[0], newSpeed[1] }};
-        }
-
-        public static double getSpeedwithAir(double A, double F, double P, double c_w, double t, double m)
-        {
-            return ((Math.Sqrt(2 * c_w * P * t * t * A * F + m * m) - m) / c_w * P * t * A);
-        }
-
-        public static double getSpeedwithAirandStart(double A, double F, double P, double c_w, double t, double v0, double m)
-        {
-            return ((Math.Sqrt(2 * A * F * P * c_w * t * t + 2 * A * P * c_w * v0 * m * t + m * m) - m) / c_w * P * t * A);
-        }
-
-        public static double[] getPosatShot(double F_Wurf, double angle_Wurf, double m, double g, double c_w, double A, double P, double t, double t_throw, double step)
-        {
-            double[] pos = new double[2], speed = new double[2];
-            for (double i = 0; i < t; i+=step)
-            {
-                speed = getSpeedatShot(F_Wurf, angle_Wurf, m, g, c_w, A, P, i, t_throw, step);
-                pos[0] += getxPart(speed)*step;
-                pos[1] += getyPart(speed)*step;
-            }
-            return pos;
         }
 
         public static double[] getPosatShotwithS(double F_Wurf, double angle_Wurf, double m, double g, double c_w, double A, double P, double t, double s_throw, double step)
@@ -183,14 +177,26 @@ namespace Physomatik1
                 pos[1] += getyPart(speed) * step;
             }
             return pos;
+        } //like this one
+
+        public static double getSpeedwithAir(double A, double F, double P, double c_w, double t, double m) //this formula only works with positive or not too negative F
+        {
+            return ((Math.Sqrt(2 * c_w * P * t * t * A * F + m * m) - m) / c_w * P * t * A);
         }
+
+        public static double getSpeedwithAirandStart(double A, double F, double P, double c_w, double t, double v0, double m) //...just like this
+        {
+            return ((Math.Sqrt(2 * A * F * P * c_w * t * t + 2 * A * P * c_w * v0 * m * t + m * m) - m) / c_w * P * t * A);
+        }
+        #endregion
 
         public static double getDeltaSpeed(double a, double dt)
         {
             return a * dt;
-        }
+        } //this one is obvious
 
-        public static double getF_G(double m, double g)
+        #region getF
+        public static double getF_G(double m, double g) //return the fitting Fs
         {
             return m * g;
         }
@@ -214,10 +220,12 @@ namespace Physomatik1
         {
             return f * getF_N(angle, m, g);
         }
+        #endregion
 
-        public static double getnewSpeedatHill(double f, double angle, double m, double g, double F_S, double step, double[] v0, double c_w, double A, double P)
+        #region Hill
+        public static double getnewSpeedatHill(double f, double angle, double m, double g, double F_S, double step, double[] v0, double c_w, double A, double P) //it's nearly the same as the shot - you just can't fall down and have more resistance
         {
-            double v = v0[0]; // 0
+            double v = v0[0];
             if (v0[1] > (angle + 180) % 360-5 && v0[1] < (angle + 180) % 360+5)
                 v *= -1;
             if(v > 0)
@@ -245,9 +253,10 @@ namespace Physomatik1
             }
             return new double[2, 2] { { getnewPosatHill(f, angle, m, g, F_S, step, v0, c_w, A, P, pos0)[0], getnewPosatHill(f, angle, m, g, F_S, step, v0, c_w, A, P, pos0)[1] },{ newSpeed[0], newSpeed[1] }};
         }
+        #endregion
 
         #region newSpeed
-        public static double[] getnewSpeed(double[] vectorv, double[] F, double dt, double m)
+        public static double[] getnewSpeed(double[] vectorv, double[] F, double dt, double m) //returns the new Speed in relativity to the old one
         {
             double[,] vectors = new double[2, 2] { { getnewSpeed(getxPart(vectorv), getxPart(F), dt, m), 0 }, { getnewSpeed(getyPart(vectorv), getyPart(F), dt, m), 90 } };
             return getresVector(vectors);
@@ -270,7 +279,7 @@ namespace Physomatik1
         }
 
         #region getPart
-        public static double getyPart(double[] vector)
+        public static double getyPart(double[] vector) //returns the y-/x-Part
         {
             return Math.Sin(ToRadian(vector[1])) * vector[0];
         }
@@ -281,12 +290,12 @@ namespace Physomatik1
         }
         #endregion
 
-        public static double ToRadian(double degree)
+        #region ToRadian/Degree
+        public static double ToRadian(double degree) //why does C# use radians?
         {
             return degree * PI / 180;
         }
 
-        #region ToRadian/Degree
         public static double ToDegree(double radian)
         {
             return radian * 180 / PI;
