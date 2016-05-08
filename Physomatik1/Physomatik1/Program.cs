@@ -7,7 +7,7 @@ namespace Physomatik1
         static void Main(string[] args)
         {
             a:
-            double[] start = new double[2] { 0, 45 };
+            /*double[] start = new double[2] { 0, 45 };
             double[] vector = new double[2] { 10, 45 };
             double t = 0;
             int sizex = Console.LargestWindowWidth, sizey = Console.LargestWindowHeight;
@@ -16,7 +16,7 @@ namespace Physomatik1
             Console.SetBufferSize(sizex, sizey);
             Console.SetWindowPosition(0, 0);
             Console.CursorVisible = false;
-            double[,] simulated = new double[100000, 2];
+            double[,] simulated = new double[50000, 2];
             int pos = 0;
             Console.SetCursorPosition(0, 0);
             double F = Convert.ToDouble(Console.ReadLine()), a = Convert.ToDouble(Console.ReadLine()), m = 10, f = 0.1, c_w = 1, A = 0.1, s = 10;
@@ -43,6 +43,7 @@ namespace Physomatik1
                     else
                     {
                         vectors = new double[2, 2] { { Physomatik.getnewPos(v, posi, step)[0], Physomatik.getnewPos(v, posi, step)[1] }, { Physomatik.getnewSpeedafterImpact(v, step, c_w, A, Physomatik.Density_Air, m, Physomatik.g, 0.1, f)[0], Physomatik.getnewSpeedafterImpact(v, step, c_w, A, Physomatik.Density_Air, m, Physomatik.g, 0.1, f)[1] } };
+                        Console.ForegroundColor = ConsoleColor.Blue;
                     }
                     v[0] = vectors[1, 0];
                     v[1] = vectors[1, 1];
@@ -83,7 +84,20 @@ namespace Physomatik1
                 {
                     break;
                 }
+            }*/
+            double[,] Parts = Physomatik.getParts(5.5, 48, 12, 71);
+            Console.WriteLine(Parts[0, 0] + "   " + Parts[0, 1]);
+            Console.WriteLine(Parts[1, 0] + "   " + Parts[1, 1]);
+            /*double[] pos = new double[2];
+            double[] v  =new double[2] { 0, 330 };
+            while(Math.Sqrt(pos[0] * pos[0] + pos[1] * pos[1]) < 3)
+            {
+                pos[0] = Physomatik.getnewPos_SpeedatHill(0.3, 330, 36 / Physomatik.g, Physomatik.g, 0, 0.001, v, 0, 0, 0, pos)[0, 0];
+                pos[1] = Physomatik.getnewPos_SpeedatHill(0.3, 330, 36 / Physomatik.g, Physomatik.g, 0, 0.001, v, 0, 0, 0, pos)[0, 1];
+                v[0] = Physomatik.getnewPos_SpeedatHill(0.3, 330, 36 / Physomatik.g, Physomatik.g, 0, 0.001, v, 0, 0, 0, pos)[1, 0];
+                v[1] = Physomatik.getnewPos_SpeedatHill(0.3, 330, 36 / Physomatik.g, Physomatik.g, 0, 0.001, v, 0, 0, 0, pos)[1, 1];
             }
+            Console.Write(v[0] + "    " + Math.Sqrt(pos[0] * pos[0] + pos[1] * pos[1]));*/
             Console.ReadLine();
             Console.Clear();
             goto a;
@@ -214,6 +228,25 @@ namespace Physomatik1
         {
             return new double[2] { pos[0] + getxPart(v) * step, pos[1] + getyPart(v) * step };
         }
+
+        #region getParts
+        public static double getonexPart(double res, double resangle, double otherangle, double ownangle)
+        {
+            double A = ToRadian(otherangle), B=ToRadian(resangle), C=ToRadian(ownangle);
+            return (res * Math.Tan(A) * Math.Cos(B) - res * Math.Sin(B)) / (Math.Tan(A) - Math.Tan(C));
+        }
+
+        public static double[,] getxParts(double res, double resangle, double angle1, double angle2)
+        {
+            return new double[2, 2] { { getonexPart(res, resangle, angle2, angle1), angle1 }, { getonexPart(res, resangle, angle1, angle2), angle2 } };
+        }
+
+        public static double[,] getParts(double res, double resangle, double angle1, double angle2)
+        {
+            double[,] xParts = getxParts(res, resangle, angle1, angle2);
+            return new double[2, 2] { { xParts[0, 0] / Math.Cos(ToRadian(xParts[0, 1])), xParts[0, 1] }, { xParts[1, 0] / Math.Cos(ToRadian(xParts[1, 1])), xParts[1, 1] } };
+        }
+        #endregion
 
         #region getF
         public static double getF_G(double m, double g) //return the fitting Fs
