@@ -1,6 +1,6 @@
 module Main (main) where
 
-main = putStrLn "Hello, World!"
+main = putStrLn "Hello, Physomatik!"
 
 g = 9.81
 densityAir = 1.2041
