@@ -7,7 +7,7 @@ namespace Physomatik1
         static void Main(string[] args)
         {
             a:
-            /*double[] start = new double[2] { 0, 45 };
+            double[] start = new double[2] { 0, 45 };
             double[] vector = new double[2] { 10, 45 };
             double t = 0;
             int sizex = Console.LargestWindowWidth, sizey = Console.LargestWindowHeight;
@@ -21,7 +21,7 @@ namespace Physomatik1
             Console.SetCursorPosition(0, 0);
             double F = Convert.ToDouble(Console.ReadLine()), a = Convert.ToDouble(Console.ReadLine()), m = 10, f = 0.1, c_w = 1, A = 0.1, s = 10;
             Console.Write("Simulating...");
-            double step = 0.001;
+            double step = 0.005;
             double[] v = new double[2] { 0, a }, posi = new double[2];
             double[,] vectors;
             bool ground = true;
@@ -34,7 +34,7 @@ namespace Physomatik1
                         Console.ForegroundColor = ConsoleColor.Red;
                         vectors = Physomatik.getnewPos_SpeedatHill(f, a, m, Physomatik.g, F, step, v, c_w, A, Physomatik.Density_Air, posi);
                     }
-                    else if(sizey / 2 - posi[1] < sizey - 10)
+                    else if(sizey / 2 - posi[1] < sizey - 50)
                     {
                         Console.ForegroundColor = ConsoleColor.White;
                         vectors = Physomatik.getnewPos_Speed(new double[2] { 0, 0 }, m, Physomatik.g, c_w, A, Physomatik.Density_Air, step, posi, v);
@@ -42,7 +42,7 @@ namespace Physomatik1
                     }
                     else
                     {
-                        vectors = new double[2, 2] { { Physomatik.getnewPos(v, posi, step)[0], Physomatik.getnewPos(v, posi, step)[1] }, { Physomatik.getnewSpeedafterImpact(v, step, c_w, A, Physomatik.Density_Air, m, Physomatik.g, 0.1, f)[0], Physomatik.getnewSpeedafterImpact(v, step, c_w, A, Physomatik.Density_Air, m, Physomatik.g, 0.1, f)[1] } };
+                        vectors = new double[2, 2] { { Physomatik.getnewPos(v, posi, step)[0], Physomatik.getnewPos(v, posi, step)[1] }, { Physomatik.getnewSpeedafterImpact(v, step, c_w, A, Physomatik.Density_Air, m, Physomatik.g, step, f, 50)[0], Physomatik.getnewSpeedafterImpact(v, step, c_w, A, Physomatik.Density_Air, m, Physomatik.g, step, f, 50)[1] } };
                         Console.ForegroundColor = ConsoleColor.Blue;
                     }
                     v[0] = vectors[1, 0];
@@ -71,11 +71,13 @@ namespace Physomatik1
 
                     Console.SetCursorPosition((int)(sizex / 2 + (simulated[pos, 0]) / 1), (int)(sizey / 2 - (simulated[pos, 1]) / 1));
                     if (Math.Sqrt(simulated[pos, 0] * simulated[pos, 0] + simulated[pos, 1] * simulated[pos, 1]) < s && ground) Console.ForegroundColor = ConsoleColor.Red;
-                    else
+                    else if (sizey / 2 - simulated[pos, 1] < sizey - 50)
                     {
                         Console.ForegroundColor = ConsoleColor.White;
                         ground = false;
                     }
+                    else
+                        Console.ForegroundColor = ConsoleColor.Blue;
                     Console.Write("█");
                     System.Threading.Thread.Sleep((int)(step*1000));
                     pos++;
@@ -84,10 +86,10 @@ namespace Physomatik1
                 {
                     break;
                 }
-            }*/
-            double[,] Parts = Physomatik.getParts(5.5, 48, 12, 71);
+            }
+            /*double[,] Parts = Physomatik.getParts(2.6, 73, 24, 114);
             Console.WriteLine(Parts[0, 0] + "   " + Parts[0, 1]);
-            Console.WriteLine(Parts[1, 0] + "   " + Parts[1, 1]);
+            Console.WriteLine(Parts[1, 0] + "   " + Parts[1, 1]);*/
             /*double[] pos = new double[2];
             double[] v  =new double[2] { 0, 330 };
             while(Math.Sqrt(pos[0] * pos[0] + pos[1] * pos[1]) < 3)
@@ -100,6 +102,9 @@ namespace Physomatik1
             Console.Write(v[0] + "    " + Math.Sqrt(pos[0] * pos[0] + pos[1] * pos[1]));*/
             Console.ReadLine();
             Console.Clear();
+            /*double[,] posSpeed = Physomatik.getnewPos_SpeedatHill(1, 20, 1, 10, 10, 1, new double[] { 10, 0 }, 1, 1, 1, new double[] { 0, 0 });
+            Console.WriteLine(posSpeed[0, 0] + " " + posSpeed[0, 1] + " " + posSpeed[1, 0] + " " + posSpeed[1, 1]);
+            Console.ReadKey();*/
             goto a;
         }
     }
@@ -213,7 +218,7 @@ namespace Physomatik1
             return a * dt;
         } //this one is obvious
 
-        public static double[] getnewSpeedafterImpact(double[] v0,  double step, double c_w, double A, double P, double m, double g, double t, double f)
+        public static double[] getnewSpeedafterImpactm(double[] v0,  double step, double c_w, double A, double P, double m, double g, double t, double f)
         {
             double vx = getxPart(v0), vy = getyPart(v0);
             double F_N = getF_G(m, g) + getF(vy, t, m);
@@ -222,6 +227,21 @@ namespace Physomatik1
             else
                 vx += geta(+f * F_N + getF_L(c_w, A, P, vx), m) * step;
             return getresVector(new double[2,2] { { vx, 0 }, { 0, 90 } });
+        }
+
+        public static double[] getnewSpeedafterImpact(double[] v0, double step, double c_w, double A, double P, double m, double g, double t, double f, double angle)
+        {
+            double vx = getxPart(v0), vy = getyPart(v0);
+            double F = getF(getParts(v0[0], (v0[1]+180)%360, (angle+90)%360, angle)[0,0], t, m);
+            double F_N = getF_N(angle, m, g) + getParts(F, (v0[1] + 180) % 360, (angle + 90) % 360, angle)[0,0];
+            double F_H = getF_H(angle, m, g);
+            double F_L = getF_L(c_w, A, P, v0[0]);
+            double F_R = getF_R(f, F_N);
+            double[] F_Resa = getresVector(new double[3, 2] { { F_H, (angle + 180) % 360 }, { F_L, (v0[1] + 180) % 360 }, { F_R, (v0[1]+180)%360 } });
+            double[] F_Res = new double[2] { getParts(F_Resa[0], F_Resa[1], angle, angle + 90)[0,0], getParts(F_Resa[0], F_Resa[1], angle, angle + 90)[0, 1]};
+            vx += getxPart(F_Res) / m * step;
+            vy += getyPart(F_Res) / m * step;
+            return getresVector(new double[2, 2] { { vx, 0 }, { vy, 90 } });
         }
 
         public static double[] getnewPos(double[] v, double[] pos, double step)
@@ -271,7 +291,12 @@ namespace Physomatik1
 
         public static double getF_R(double f, double angle, double m, double g)
         {
-            return f * getF_N(angle, m, g);
+            return getF_R(f, getF_N(angle, m, g));
+        }
+
+        public static double getF_R(double f, double F_N)
+        {
+            return f * F_N;
         }
         #endregion
 
