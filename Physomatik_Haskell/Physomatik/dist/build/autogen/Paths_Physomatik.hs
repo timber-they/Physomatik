@@ -16,7 +16,7 @@ catchIO :: IO a -> (Exception.IOException -> IO a) -> IO a
 catchIO = Exception.catch
 
 version :: Version
-version = Version [1,0,0,2] []
+version = Version [1,0,0,1] []
 prefix, bindirrel :: FilePath
 prefix        = "C:\\Users\\Timo\\AppData\\Roaming\\cabal"
 bindirrel     = "bin"
@@ -25,13 +25,13 @@ getBinDir :: IO FilePath
 getBinDir = getPrefixDirRel bindirrel
 
 getLibDir :: IO FilePath
-getLibDir = getPrefixDirRel "x86_64-windows-ghc-7.10.3\\Physomatik-1.0.0.2-DjhHkf3bMmZ8hX5Xf75etV"
+getLibDir = getPrefixDirRel "x86_64-windows-ghc-7.10.3\\Physomatik-1.0.0.1-LDgqWfsMkkK2ewBRaocKwo"
 
 getDataDir :: IO FilePath
-getDataDir =  catchIO (getEnv "Physomatik_datadir") (\_ -> getPrefixDirRel "x86_64-windows-ghc-7.10.3\\Physomatik-1.0.0.2")
+getDataDir =  catchIO (getEnv "Physomatik_datadir") (\_ -> getPrefixDirRel "x86_64-windows-ghc-7.10.3\\Physomatik-1.0.0.1")
 
 getLibexecDir :: IO FilePath
-getLibexecDir = getPrefixDirRel "Physomatik-1.0.0.2-DjhHkf3bMmZ8hX5Xf75etV"
+getLibexecDir = getPrefixDirRel "Physomatik-1.0.0.1-LDgqWfsMkkK2ewBRaocKwo"
 
 getSysconfDir :: IO FilePath
 getSysconfDir = getPrefixDirRel "etc"

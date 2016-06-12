@@ -15,7 +15,7 @@ homepage: funglasses.de
 synopsis: Physomatik, an awesome Package
 category: Console, Text
 cabal-version: >= 1.6
-build-type: Complex
+build-type: Custom
 
 Description:
   This is an implementation of some physical / mathematical laws in Haskell!
