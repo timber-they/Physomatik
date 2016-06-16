@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace Physomatik1
 {
@@ -6,105 +9,19 @@ namespace Physomatik1
     {
         static void Main(string[] args)
         {
-            a:
-            double[] start = new double[2] { 0, 45 };
-            double[] vector = new double[2] { 10, 45 };
-            double t = 0;
-            int sizex = Console.LargestWindowWidth, sizey = Console.LargestWindowHeight;
-            Console.SetBufferSize(sizex * 10, sizey * 10);
-            Console.SetWindowSize(sizex, sizey);
-            Console.SetBufferSize(sizex, sizey);
-            Console.SetWindowPosition(0, 0);
+            System.Globalization.CultureInfo customCulture = (System.Globalization.CultureInfo)System.Threading.Thread.CurrentThread.CurrentCulture.Clone();
+            customCulture.NumberFormat.NumberDecimalSeparator = ".";
+            System.Threading.Thread.CurrentThread.CurrentCulture = customCulture;
             Console.CursorVisible = false;
-            double[,] simulated = new double[50000, 2];
-            int pos = 0;
-            Console.SetCursorPosition(0, 0);
-            double F = Convert.ToDouble(Console.ReadLine()), a = Convert.ToDouble(Console.ReadLine()), m = 10, f = 0.1, c_w = 1, A = 0.1, s = 10;
-            Console.Write("Simulating...");
-            double step = 0.005;
-            double[] v = new double[2] { 0, a }, posi = new double[2];
-            double[,] vectors;
-            bool ground = true;
-            while (pos < simulated.GetLength(0) - 1)
+            a:
+            List<double[]> data = Physomatik.getsimulatedPossesFromFile("end.txt");
+            foreach (double[] item in data)
             {
-                try
-                {
-                    if (Math.Sqrt(posi[0]*posi[0]+posi[1]*posi[1]) < s && ground)
-                    {
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        vectors = Physomatik.getnewPos_SpeedatHill(f, a, m, Physomatik.g, F, step, v, c_w, A, Physomatik.Density_Air, posi);
-                    }
-                    else if(sizey / 2 - posi[1] < sizey - 50)
-                    {
-                        Console.ForegroundColor = ConsoleColor.White;
-                        vectors = Physomatik.getnewPos_Speed(new double[2] { 0, 0 }, m, Physomatik.g, c_w, A, Physomatik.Density_Air, step, posi, v);
-                        ground = false;
-                    }
-                    else
-                    {
-                        vectors = new double[2, 2] { { Physomatik.getnewPos(v, posi, step)[0], Physomatik.getnewPos(v, posi, step)[1] }, { Physomatik.getnewSpeedafterImpact(v, step, c_w, A, Physomatik.Density_Air, m, Physomatik.g, step, f, 50)[0], Physomatik.getnewSpeedafterImpact(v, step, c_w, A, Physomatik.Density_Air, m, Physomatik.g, step, f, 50)[1] } };
-                        Console.ForegroundColor = ConsoleColor.Blue;
-                    }
-                    v[0] = vectors[1, 0];
-                    v[1] = vectors[1, 1];
-                    posi[0] = vectors[0, 0];
-                    posi[1] = vectors[0, 1];
-                    simulated[pos, 0] = posi[0];
-                    simulated[pos, 1] = posi[1];
-                    Console.SetCursorPosition((int)(sizex / 2 + (posi[0]) / 1), (int)(sizey / 2 - (posi[1]) / 1));
-                    Console.Write("█");
-                    pos++;
-                    t += step;
-                }
-                catch
-                {
-                    break;
-                }
+                Console.SetCursorPosition((int)Math.Round(item[0]), Console.WindowHeight - (int)Math.Round(item[1]));
+                Console.Write("█");
+                System.Threading.Thread.Sleep(1);
             }
-            pos = 0;
-            ground = true;
-            Console.Clear();
-            while(pos < simulated.GetLength(0)-1)
-            {
-                try
-                {
-
-                    Console.SetCursorPosition((int)(sizex / 2 + (simulated[pos, 0]) / 1), (int)(sizey / 2 - (simulated[pos, 1]) / 1));
-                    if (Math.Sqrt(simulated[pos, 0] * simulated[pos, 0] + simulated[pos, 1] * simulated[pos, 1]) < s && ground) Console.ForegroundColor = ConsoleColor.Red;
-                    else if (sizey / 2 - simulated[pos, 1] < sizey - 50)
-                    {
-                        Console.ForegroundColor = ConsoleColor.White;
-                        ground = false;
-                    }
-                    else
-                        Console.ForegroundColor = ConsoleColor.Blue;
-                    Console.Write("█");
-                    System.Threading.Thread.Sleep((int)(step*1000));
-                    pos++;
-                }
-                catch
-                {
-                    break;
-                }
-            }
-            /*double[,] Parts = Physomatik.getParts(2.6, 73, 24, 114);
-            Console.WriteLine(Parts[0, 0] + "   " + Parts[0, 1]);
-            Console.WriteLine(Parts[1, 0] + "   " + Parts[1, 1]);*/
-            /*double[] pos = new double[2];
-            double[] v  =new double[2] { 0, 330 };
-            while(Math.Sqrt(pos[0] * pos[0] + pos[1] * pos[1]) < 3)
-            {
-                pos[0] = Physomatik.getnewPos_SpeedatHill(0.3, 330, 36 / Physomatik.g, Physomatik.g, 0, 0.001, v, 0, 0, 0, pos)[0, 0];
-                pos[1] = Physomatik.getnewPos_SpeedatHill(0.3, 330, 36 / Physomatik.g, Physomatik.g, 0, 0.001, v, 0, 0, 0, pos)[0, 1];
-                v[0] = Physomatik.getnewPos_SpeedatHill(0.3, 330, 36 / Physomatik.g, Physomatik.g, 0, 0.001, v, 0, 0, 0, pos)[1, 0];
-                v[1] = Physomatik.getnewPos_SpeedatHill(0.3, 330, 36 / Physomatik.g, Physomatik.g, 0, 0.001, v, 0, 0, 0, pos)[1, 1];
-            }
-            Console.Write(v[0] + "    " + Math.Sqrt(pos[0] * pos[0] + pos[1] * pos[1]));*/
             Console.ReadLine();
-            Console.Clear();
-            /*double[,] posSpeed = Physomatik.getnewPos_SpeedatHill(1, 20, 1, 10, 10, 1, new double[] { 10, 0 }, 1, 1, 1, new double[] { 0, 0 });
-            Console.WriteLine(posSpeed[0, 0] + " " + posSpeed[0, 1] + " " + posSpeed[1, 0] + " " + posSpeed[1, 1]);
-            Console.ReadKey();*/
             goto a;
         }
     }
@@ -114,6 +31,53 @@ namespace Physomatik1
         public static double PI = 3.14159265359;
         public static double g = 9.81;
         public static double Density_Air = 1.2041;
+
+        public static List<double[]> getsimulatedPossesFromFile(string FilePath)
+        {
+            string content = File.ReadAllText(FilePath);
+            List<char> listi = content.ToList();
+            listi.Remove('[');
+            listi.Remove(']');
+            content = string.Join("", listi);
+            List<string> TupleStrings = ToListByBrackets(listi);
+            List<double[]> final = new List<double[]>();
+            foreach (string item in TupleStrings)
+            {
+                final.Add(stringtoDoubles(item));
+            }
+            return final;
+        }
+
+        public static double[] stringtoDoubles (string content)
+        {
+            string[] splitted = content.Split(',');
+            return new double[2] { Convert.ToDouble(splitted[0]), Convert.ToDouble(splitted[1])};
+        }
+
+        public static List<string> ToListByBrackets(List<char> listi)
+        {
+            List<int> open = getIndexesOfX(listi, '(');
+            List<int> close = getIndexesOfX(listi, ')');
+            List<string> final = new List<string>();
+            while(listi.Count > 0 && close.Count > 0 && open.Count > 0)
+            {
+                final.Add(string.Join("", (listi.GetRange(open.First() + 1, close.First() - open.First() - 1))));
+                open.Remove(open.First());
+                close.Remove(close.First());
+            }
+            return final;
+        }
+
+        public static List<int> getIndexesOfX(List<char> listi, char x)
+        {
+            char[] arri = listi.ToArray();
+            List<int> ints = new List<int>();
+            for (int i = 0; i < arri.Length; i++)
+            {
+                if (arri[i] == x) ints.Add(i);
+            }
+            return ints;
+        }
 
         #region resVector
         public static double[] getresVector(double[,] vectors)

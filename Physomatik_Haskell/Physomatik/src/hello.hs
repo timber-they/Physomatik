@@ -6,7 +6,7 @@ import System.IO
 import Data.Char
 import Control.Monad
 
-main = putStrLn "Hello, Physomatik!"
+main = do simulateAndWriteFromFile "data.txt" "end.txt"
 
 g = 9.81
 densityAir = 1.2041
@@ -139,12 +139,12 @@ mod a b
     |a > b = Main.mod (a-b) b
     |otherwise = a
 
-simulatePosatShot arena f_throw angle_throw t_throw f_floor cw p a v_old pos_old step m g t  max
-    |length arena == 0 || length (head arena) == 0 = []
+simulatePosatShot arena f_throw angle_throw t_throw f_floor cw p a v_old pos_old step m g t max
+    |length arena == 0 || length (head arena) == 0  || fst pos_old < 0.11 || snd pos_old < 0.11 = []
     |t <= max && round (fst pos_old) < length (head arena) && round (snd pos_old) < length arena && fst pos_old > 0 && snd pos_old > 0=
         let pos_pixl = (round (fst pos_old), round (snd pos_old))
             pos_speed = getnewPosSpeedwithMap arena f_throw angle_throw t_throw f_floor cw p a v_old pos_pixl step m g t pos_old
-        in fst pos_speed : simulatePosatShot arena f_throw angle_throw t_throw f_floor cw p a (snd pos_speed) (fst pos_speed) step m g t max
+        in fst pos_speed : simulatePosatShot arena f_throw angle_throw t_throw f_floor cw p a (snd pos_speed) (fst pos_speed) step m g (t+step) max
     |otherwise = []
 
 getfromPos1 ::[a] -> Int -> a
@@ -199,6 +199,7 @@ stringtoMaybe "Nothing" = Nothing
 onedstringtoMaybe = map stringtoMaybe
 twodstringtoMaybe = map onedstringtoMaybe
 
+simulatefromFile :: Double -> Double -> Double -> Double -> Double -> Double -> Double -> (Double,Double) -> (Double,Double) -> Double -> Double -> Double -> Double -> Double -> String -> Char -> Char -> IO [(Double,Double)]
 simulatefromFile f_throw angle_throw t_throw f_floor cw p a v_old pos_old step m g t  max filePath divider0 divider1 = do
     x <- fileto2dMaybe filePath divider0 divider1
     return (simulatePosatShot x f_throw angle_throw t_throw f_floor cw p a v_old pos_old step m g t  max)
@@ -223,8 +224,14 @@ stringFromy (x:xs) y
     |x == y = xs
     |otherwise = stringFromy xs y
 
---simulatefromFiles filePath_arena filePath_data = do
-
+simulatefromFiles filePath_data = do
+    content <- getdata "data.txt" ':'
+    simulatefromFile
+        (g1OQ (showDataTuple content 0)) (g1OQ (showDataTuple content 1)) (g1OQ (showDataTuple content 2)) (g1OQ (showDataTuple content 3))
+        (g1OQ (showDataTuple content 4)) (g1OQ (showDataTuple content 5)) (g1OQ (showDataTuple content 6)) (g2OQ (showDataTuple content 7))
+        (g2OQ (showDataTuple content 8)) (g1OQ (showDataTuple content 9)) (g1OQ (showDataTuple content 10)) (g1OQ (showDataTuple content 11))
+        (g1OQ (showDataTuple content 12)) (g1OQ (showDataTuple content 13)) (g3OQ (showDataTuple content 14)) (g4OQ (showDataTuple content 15))
+        (g4OQ (showDataTuple content 16))
 
 fileto2dMaybe filePath divider0 divider1 = do
     x <- fileto2dList filePath divider0 divider1
@@ -239,7 +246,7 @@ showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
 showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) 5 = (Just x6, Nothing, Nothing, Nothing)
 showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) 6 = (Just x7, Nothing, Nothing, Nothing)
 showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) 7 = (Nothing, Just x8, Nothing, Nothing)
-showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) 8 = (Nothing, Just x8, Nothing, Nothing)
+showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) 8 = (Nothing, Just x9, Nothing, Nothing)
 showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) 9 = (Just x10, Nothing, Nothing, Nothing)
 showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) 10 = (Just x11, Nothing, Nothing, Nothing)
 showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) 11 = (Just x12, Nothing, Nothing, Nothing)
@@ -249,15 +256,25 @@ showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
 showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) 15 = (Nothing, Nothing, Nothing, Just x16)
 showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) 16 = (Nothing, Nothing, Nothing, Just x17)
 
+showAllDataTuple x 17 = []
+showAllDataTuple x y = showDataTuple x y : showAllDataTuple x (y+1)
+
 getxofDataFile filePath x = do
     y <- getdata"data.txt" ':'
     let z = showDataTuple y x
     return z
 
-getFirstOfQuadruple (a, _, _, _) = a
-getSecondOfQuadruple (_, a, _, _) = a
-getThirdOfQuadruple (_, _, a, _) = a
-getFourthOfQuadruple (_, _, _, a) = a
+g1OQ (Just a, _, _, _) = a
+g2OQ (_, Just a, _, _) = a
+g3OQ (_, _, Just a, _) = a
+g4OQ (_, _, _, Just a) = a
+
+listToString [] = ""
+listToString (x : xs) = (show x) ++ (listToString xs)
+
+simulateAndWriteFromFile datafile resultfile = do
+	x <- simulatefromFiles datafile
+	writeFile resultfile (show x)
 
 test = simulatefromFile 0 1 2 3 4 5 6 (7,7) (8,8) 0.001 10 11 12 13 "hi.txt" '.' ','
 test2 = do
@@ -268,27 +285,3 @@ test3 = do
     (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) <- getdata "data.txt" ':'
     print x2
     return x2
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

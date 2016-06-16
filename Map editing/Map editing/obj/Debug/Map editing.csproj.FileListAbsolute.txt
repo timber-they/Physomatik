@@ -1,0 +1,6 @@
+c:\users\timo\documents\visual studio 2015\Projects\Map editing\Map editing\bin\Debug\Map editing.exe.config
+c:\users\timo\documents\visual studio 2015\Projects\Map editing\Map editing\bin\Debug\Map editing.exe
+c:\users\timo\documents\visual studio 2015\Projects\Map editing\Map editing\bin\Debug\Map editing.pdb
+c:\users\timo\documents\visual studio 2015\Projects\Map editing\Map editing\obj\Debug\Map editing.csprojResolveAssemblyReference.cache
+c:\users\timo\documents\visual studio 2015\Projects\Map editing\Map editing\obj\Debug\Map editing.exe
+c:\users\timo\documents\visual studio 2015\Projects\Map editing\Map editing\obj\Debug\Map editing.pdb
