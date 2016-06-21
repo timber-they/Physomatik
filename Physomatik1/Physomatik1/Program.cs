@@ -51,7 +51,7 @@ namespace Physomatik1
             string content = File.ReadAllText(filePath);
             string[] splitted = content.Split(':');
             string[] newdata = new string[splitted.Length];
-            string[] text = new string[] { "F_throw", "angle_throw", "t_throw", "f_floor", "cw", "p", "A", "v_old", "pos_old", "step", "m", "g", "t", "max", "filePath", "divider0", "divider1" };
+            string[] text = new string[] { "F_throw", "angle_throw", "t_throw", "f_floor", "cw", "p", "A", "v_old", "pos_old", "step", "m", "g", "t", "max", "filePath", "divider0", "divider1", "(-)bounce Factor" };
             for (int i = 0; i < splitted.Length; i++)
             {
                 Console.WriteLine("Der Wert von " + text[i] + " beträgt " + splitted[i] + ". Zum Ändern neuen Wert eingeben, ansonsten nichts eingeben!");
