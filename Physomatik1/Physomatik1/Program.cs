@@ -25,7 +25,13 @@ namespace Physomatik1
             p.Close();
             Console.Clear();
             int cx = 0, cy = 0;
-            if (File.Exists("map.txt") && File.Exists("data.txt") && File.Exists("end.txt"))
+            if(File.Exists("Physomatik_betterVisualisation.exe"))
+            {
+                Process p2 = new Process();
+                p2.StartInfo.FileName = "Physomatik_betterVisualisation.exe";
+                p2.Start();
+            }
+            else if (File.Exists("map.txt") && File.Exists("data.txt") && File.Exists("end.txt"))
             {
                 List<double[]> data = Physomatik.getsimulatedPossesFromFile("end.txt");
                 foreach (double[] item in data)
