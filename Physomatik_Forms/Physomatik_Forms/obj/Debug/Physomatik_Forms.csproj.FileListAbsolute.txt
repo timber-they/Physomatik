@@ -1,0 +1,9 @@
+c:\users\timo\documents\visual studio 2015\Projects\Physomatik_Forms\Physomatik_Forms\bin\Debug\Physomatik_Forms.exe.config
+c:\users\timo\documents\visual studio 2015\Projects\Physomatik_Forms\Physomatik_Forms\bin\Debug\Physomatik_Forms.exe
+c:\users\timo\documents\visual studio 2015\Projects\Physomatik_Forms\Physomatik_Forms\bin\Debug\Physomatik_Forms.pdb
+c:\users\timo\documents\visual studio 2015\Projects\Physomatik_Forms\Physomatik_Forms\obj\Debug\Physomatik_Forms.csprojResolveAssemblyReference.cache
+c:\users\timo\documents\visual studio 2015\Projects\Physomatik_Forms\Physomatik_Forms\obj\Debug\Physomatik_Forms.Form1.resources
+c:\users\timo\documents\visual studio 2015\Projects\Physomatik_Forms\Physomatik_Forms\obj\Debug\Physomatik_Forms.Properties.Resources.resources
+c:\users\timo\documents\visual studio 2015\Projects\Physomatik_Forms\Physomatik_Forms\obj\Debug\Physomatik_Forms.csproj.GenerateResource.Cache
+c:\users\timo\documents\visual studio 2015\Projects\Physomatik_Forms\Physomatik_Forms\obj\Debug\Physomatik_Forms.exe
+c:\users\timo\documents\visual studio 2015\Projects\Physomatik_Forms\Physomatik_Forms\obj\Debug\Physomatik_Forms.pdb
