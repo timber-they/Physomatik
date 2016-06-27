@@ -65,11 +65,14 @@ namespace Physomatik_Forms
                 {
                     for (int x = 0; x < map.GetLength(1); x++)
                     {
-                        if (map[y, x] >= 0) e.Graphics.FillRectangle(Brushes.Red, x * fac, y * fac, fac, fac);
+                        if (map[y, x] >= 0)
+                            e.Graphics.FillRectangle(Brushes.Red, x * fac, y * fac, fac, fac);
                     }
                 }
                 if (!visualisation)
                 {
+                    button5.Enabled = true;
+                    button5.Visible = true;
                     for (int i = 0; i < marks.Count - 1; i += 2)
                     {
                         e.Graphics.DrawLine(Pens.Black, marks.ElementAt(i)[0], marks.ElementAt(i)[1], marks.ElementAt(i + 1)[0], marks.ElementAt(i + 1)[1]);
@@ -79,8 +82,10 @@ namespace Physomatik_Forms
                 }
                 else
                 {
-                    e.Graphics.DrawString(pos.ToString(), new Font(FontFamily.GenericSansSerif, 10), Brushes.Black, 100, 100);
+                    button5.Enabled = false;
+                    button5.Visible = false;
                     pos += 4;
+                    e.Graphics.DrawString(pos.ToString(), new Font(FontFamily.GenericSansSerif, 10), Brushes.Black, 100, 100);
                     if (File.Exists("end.txt") && pos < data.GetLength(0) - 1)
                     {
                         for (int i = 0; i < pos; i++)
@@ -93,7 +98,9 @@ namespace Physomatik_Forms
             }
             else
             {
-                enable_dataStuff();
+                if(!label1.Enabled)enable_dataStuff();
+                button5.Enabled = false;
+                button5.Visible = false;
             }
         }
 
@@ -356,9 +363,9 @@ namespace Physomatik_Forms
         {
             float[] first = new float[2] { firstt[0], height - firstt[1] }, second = new float[2] { secondt[0], height - secondt[1] };
             float mg = (second[1] - first[1]) / (second[0] - first[0]);
-            int a = (int)(ToDegree(Math.Atan((second[1] - first[1]) / (second[0] - first[0]))) / 36);
-            while (a >= 10) a -= 10;
-            while (a < 0) a += 10;
+            int a = (int)(ToDegree(Math.Atan((second[1] - first[1]) / (second[0] - first[0]))));
+            while (a >= 360) a -= 360;
+            while (a < 0) a += 360;
             if (first[0] < second[0])
                 for (int x = (int)first[0]; x < second[0]; x++)
                 {
@@ -427,6 +434,7 @@ namespace Physomatik_Forms
                     visualisation = true;
                     data_edit = false;
                     disable_dataStuff();
+                    data = getsimulatedPossesFromFile("end.txt").ToArray();
                     Refresh();
                 }
                 else if (e.KeyChar == 'e')
@@ -579,11 +587,6 @@ namespace Physomatik_Forms
 
         private void button1_Click(object sender, EventArgs e)
         {
-            Process p2 = new Process();
-            p2.StartInfo.FileName = "Haskell_calcs.exe";
-            p2.StartInfo.CreateNoWindow = true;
-            p2.Start();
-            p2.WaitForExit();
             data_edit = false;
             visualisation = true;
             disable_dataStuff();
@@ -603,6 +606,12 @@ namespace Physomatik_Forms
                 final += newdata[i] + ":";
             }
             File.WriteAllText("data.txt", final + newdata.Last());
+            Process p2 = new Process();
+            p2.StartInfo.FileName = "Haskell_calcs.exe";
+            p2.StartInfo.CreateNoWindow = true;
+            p2.Start();
+            p2.WaitForExit();
+            data = getsimulatedPossesFromFile("end.txt").ToArray();
             Refresh();
         }
         void edit_data(string file_Path)
@@ -614,6 +623,57 @@ namespace Physomatik_Forms
             {
                 boxes[i].Text = splitted[i];
             }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            if(data_edit)
+            {
+                data_edit = false;
+                disable_dataStuff();
+                Refresh();
+            }
+            else if(visualisation)
+            {
+                visualisation = false;
+                Refresh();
+            }
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            enable_dataStuff();
+            data_edit = true;
+            visualisation = false;
+            Refresh();
+            edit_data("data.txt");
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            visualisation = true;
+            if (data_edit)
+            {
+                data_edit = false;
+                disable_dataStuff();
+                Refresh();
+            }
+            Process p2 = new Process();
+            p2.StartInfo.FileName = "Haskell_calcs.exe";
+            p2.StartInfo.CreateNoWindow = true;
+            p2.Start();
+            p2.WaitForExit();
+            data = getsimulatedPossesFromFile("end.txt").ToArray();
+            pos = data.GetLength(0) - 6;
+            Refresh();
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            button5.Enabled = false;
+            if (!File.Exists("map.txt")) File.Create("map.txt");
+            File.WriteAllText("map.txt", getcontents(umdrehen(Feld)));
+            button5.Enabled = true;
         }
     }
 }
