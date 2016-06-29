@@ -31,6 +31,8 @@ namespace Physomatik_Forms
         int height = 0;
         int width = 0;
 
+        Pen[] colors = new Pen[10] { Pens.LightGreen, Pens.YellowGreen, Pens.LimeGreen,Pens.Green, Pens.SeaGreen, Pens.Blue, Pens.BlueViolet, Pens.DarkRed, Pens.IndianRed, Pens.Red };
+
         public Form1()
         {
             InitializeComponent();
@@ -90,7 +92,7 @@ namespace Physomatik_Forms
                     {
                         for (int i = 0; i < pos; i++)
                         {
-                            e.Graphics.DrawLine(Pens.Black, fac * (float)data[i][0], height - (float)(fac * data[i][1]), fac * (float)data[i + 1][0], height - (float)(fac * data[i + 1][1]));
+                            e.Graphics.DrawLine(colors[(int)((double)(colors.Length*i/pos))], fac * (float)data[i][0], height - (float)(fac * data[i][1]), fac * (float)data[i + 1][0], height - (float)(fac * data[i + 1][1]));
                         }
                         e.Graphics.DrawString((fac * data[pos][0]).ToString() + " " + (fac * data[pos][1]).ToString(), new Font(FontFamily.GenericMonospace, 10), Brushes.Black, 10, 10);
                     }
@@ -611,6 +613,7 @@ namespace Physomatik_Forms
             p2.StartInfo.CreateNoWindow = true;
             p2.Start();
             p2.WaitForExit();
+            p2.Close();
             data = getsimulatedPossesFromFile("end.txt").ToArray();
             Refresh();
         }
