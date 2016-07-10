@@ -1,3 +1,5 @@
+--nc -> not controlled
+--hc -> hopefully correct
 module Main (main) where
 
 import Data.Maybe
@@ -64,9 +66,9 @@ getFL cw a p v = cw * 0.5 * a * p * v * v
 getFN::Double->Double->Double->Double
 getFN a m g = cos (toRadian a) * getFG m g
 
---returns the Power of the object pulling it downwards
+--returns the Power of the object pulling it downwards - todo: Power direction wrong!!
 getFH::Double->Double->Double->Double
-getFH a m g = sin (toRadian a) * getFG m g
+getFH a m g = -abs(sin (toRadian a) * getFG m g)
 
 --returns the BAD Power
 getFR::Double->Double->Double
@@ -78,7 +80,7 @@ getFRa f angle m g = getFR f (getFN angle m g)
 
 --returns the new Speed at given Old Speed, acceleration and time-span
 getnewSpeed::Double->Double->Double->Double
-getnewSpeed v a dt = v + getdeltaSpeed a dt
+getnewSpeed v a dt = (+) v (getdeltaSpeed a dt)
 
 --returns the new Speed at given old Speed, Power, time-span and mass
 getnewSpeedFm::Double->Double->Double->Double->Double
@@ -89,11 +91,11 @@ getnewSpeedvec::(Double,Double)->(Double,Double)->Double->Double->(Double,Double
 getnewSpeedvec v f dt m = getresVector [(getnewSpeedFm (getxPart v) (getxPart f) dt m, 0),(getnewSpeedFm (getyPart v) (getyPart f) dt m, 90)]
 
 --returns the new Position and Speed at a throw
-getnewPosSpeed::(Double,Double)->Double->Double->Double->Double->Double->Double->(Double,Double)->(Double,Double)->(Double,Double,(Double,Double))
+getnewPosSpeed::(Double,Double)->Double->Double->Double->Double->Double->Double->(Double,Double)->(Double,Double)->((Double,Double),(Double,Double))
 getnewPosSpeed fWurf m g cw a p step oldpos oldv =
     let newSpeed = getnewSpeedvec oldv (getresVector [fWurf,(getFG m g, 270),(getFL cw a p (fst oldv), snd oldv + 180)]) step m
     in
-        (getxPart newSpeed * step + fst oldpos, getyPart newSpeed * step + snd oldpos, newSpeed)
+        ((getxPart newSpeed * step + fst oldpos, getyPart newSpeed * step + snd oldpos), newSpeed)
 
 --returns the Speed at a Shot
 getSpeedatShot::Double->Double->Double->Double->Double->Double->Double->Double->Double->Double->(Double,Double)
@@ -101,7 +103,7 @@ getSpeedatShot fthrow anglethrow m g cw a p t t_throw step
     |t <= 0 = (0,0)
     |otherwise =
         let v = getSpeedatShot fthrow anglethrow m g cw a p (t-step) t_throw step
-            fs = getresVector [(m*g, 270), (fthrow * notbigger01 t t_throw , anglethrow),(getFL cw a p (fst v), snd v + 180)]
+            fs = getresVector [(getFG m g, 270), (fthrow * notbigger01 t t_throw , anglethrow),(getFL cw a p (fst v), snd v + 180)]
         in  getnewSpeedvec v fs step m
 
 --returns the new Speed at a Shot
@@ -109,7 +111,7 @@ getnewSpeedatShot::Double->Double->Double->Double->Double->Double->Double->Doubl
 getnewSpeedatShot fthrow anglethrow m g cw a p t t_throw step v
     |t <= 0 = (0,0)
     |otherwise =
-        let fs = getresVector [(m*g, 270), (fthrow * notbigger01 t t_throw , anglethrow),(getFL cw a p (fst v), snd v + 180)]
+        let fs = getresVector [(getFG m g, 270), (fthrow * notbigger01 t t_throw , anglethrow),(getFL cw a p (fst v), snd v + 180)]
         in getnewSpeedvec v fs step m
 
 --returns the Position at a Shot
@@ -127,7 +129,7 @@ notbigger01 a b
     |a > b = 0.0
     |otherwise = 1.0
 
---returns the new Speed after an Impact
+--returns the new Speed after an Impact -nc
 getnewSpeedafterImpact::(Double,Double)->Double->Double->Double->Double->Double->Double->Double->Double->Double->(Double,Double)
 getnewSpeedafterImpact v0 step cw a p m g t f angle =
     let vx = getxPart v0
@@ -145,7 +147,7 @@ getnewSpeedafterImpact v0 step cw a p m g t f angle =
 getF::Double->Double->Double->Double
 getF v t = (*) (v/t)
 
---returns two parts of a Vector
+--returns two parts of a Vector -hc
 getParts::Double->Double->Double->Double->((Double,Double),(Double,Double))
 getParts res resangle angle1 angle2 =
     let xParts = getxParts res resangle angle1 angle2
@@ -153,11 +155,11 @@ getParts res resangle angle1 angle2 =
         b = fst (fst xParts) / (cos (toRadian (snd (fst xParts))))
     in  ((b, angle1), (a, angle2))
 
---returns two x-Parts of a Vector
+--returns two x-Parts of a Vector -hc
 getxParts::Double->Double->Double->Double->((Double,Double),(Double,Double))
 getxParts res resangle angle1 angle2 = ((getonexPart res resangle angle2 angle1, angle1),(getonexPart res resangle angle1 angle2, angle2))
 
---returns one x-Part of a Vector (with Intersection Point and wxMaxima)
+--returns one x-Part of a Vector (with Intersection Point and wxMaxima) -hc
 getonexPart::Double->Double->Double->Double->Double
 getonexPart res resangle otherangle ownangle =
     let a = toRadian otherangle
@@ -166,33 +168,33 @@ getonexPart res resangle otherangle ownangle =
     in (res * tan a * cos b - res * sin b) / (tan a - tan c)
 
 --returns the new Speed at a Hill
-getnewSpeedatHill :: Double -> Double -> Double -> Double -> Double -> Double -> (Double,Double) -> Double -> Double -> Double -> (Double,Double)
-getnewSpeedatHill f angle m g fs step v0 cw a p =
+getnewSpeedatHill :: Double -> Double -> Double -> Double -> Double -> Double -> (Double,Double) -> Double -> Double -> Double -> Double -> Bool -> (Double,Double)
+getnewSpeedatHill f angle m g fs step v0 cw a p bouncefac up =
     let parts = getParts (fst v0) (snd v0) angle (angle+270)
-        vt  |fst (snd parts) > 0 = getresVector [fst parts, ((fst (snd parts) * (-1)), (snd (snd parts)))]
+        vt  |fst (snd parts) > 0 && up || fst (snd parts) < 0 && (not up) = getresVector [fst parts, ((fst (snd parts) * bouncefac), (snd (snd parts)))]
             |otherwise = getresVector [fst parts, snd parts]
         fn = getresVector [(getFH angle m g, angle), (getFRa f angle m g, snd vt + 180), (getFL cw a p (fst vt), snd vt + 180)]
     in  getnewSpeedvec vt fn step m
 
 --returns the new Speed at a Hill with throwing-Power/Time
 --                              f           angle   m           g           fs      step        v0              cw          a       p           t_throw   t
-getnewSpeedatHillwitht_throw :: Double -> Double -> Double -> Double -> Double -> Double -> (Double,Double) -> Double -> Double -> Double -> Double -> Double -> (Double, Double)
-getnewSpeedatHillwitht_throw f angle m g fs step v0 cw a p t_throw t
-    |t <= t_throw = getnewSpeedatHill f angle m g fs step v0 cw a p
-    |otherwise = getnewSpeedatHill f angle m g 0 step v0 cw a p
+getnewSpeedatHillwitht_throw :: Double -> Double -> Double -> Double -> Double -> Double -> (Double,Double) -> Double -> Double -> Double -> Double -> Double -> Double -> Bool -> (Double, Double)
+getnewSpeedatHillwitht_throw f angle m g fs step v0 cw a p t_throw t bouncefac up
+    |t <= t_throw = getnewSpeedatHill f angle m g fs step v0 cw a p bouncefac up
+    |otherwise = getnewSpeedatHill f angle m g 0 step v0 cw a p bouncefac up
 
 --returns the new Pos at a Hill
-getnewPosatHill::Double->Double->Double->Double->Double->Double->(Double,Double)->Double->Double->Double->(Double,Double)->(Double,Double)
-getnewPosatHill f angle m g fs step v0 cw a p pos0 =
-    let newspeed = getnewSpeedatHill f angle m g fs step v0 cw a p
+getnewPosatHill::Double->Double->Double->Double->Double->Double->(Double,Double)->Double->Double->Double->(Double,Double)->Double->(Double,Double)
+getnewPosatHill f angle m g fs step v0 cw a p pos0 bouncefac=
+    let newspeed = getnewSpeedatHill f angle m g fs step v0 cw a p bouncefac True
     in  (fst pos0 + getxPart (fst newspeed*step, snd newspeed), snd pos0 + getyPart (fst newspeed * step, snd newspeed))
 
 --returns the new Position and Speed at a Hill
-getnewPosSpeedatHill::Double->Double->Double->Double->Double->Double->(Double,Double)->Double->Double->Double->(Double,Double)->((Double,Double),(Double,Double))
-getnewPosSpeedatHill f angle m g fs step v0 cw a p pos0 =
-    let newSpeed = getnewSpeedatHill f angle m g fs step v0 cw a p
-    in  if fst newSpeed < 0 then (getnewPosatHill f angle m g fs step v0 cw a p pos0, (negate (fst newSpeed), snd newSpeed + 180))
-        else (getnewPosatHill f angle m g fs step v0 cw a p pos0, newSpeed)
+getnewPosSpeedatHill::Double->Double->Double->Double->Double->Double->(Double,Double)->Double->Double->Double->(Double,Double)->Double->((Double,Double),(Double,Double))
+getnewPosSpeedatHill f angle m g fs step v0 cw a p pos0 bouncefac =
+    let newSpeed = getnewSpeedatHill f angle m g fs step v0 cw a p bouncefac True
+    in  if fst newSpeed < 0 then (getnewPosatHill f angle m g fs step v0 cw a p pos0 bouncefac, (negate (fst newSpeed), snd newSpeed + 180))
+        else (getnewPosatHill f angle m g fs step v0 cw a p pos0 bouncefac, newSpeed)
 
 --negates it maybe (in addiction to the angle)
 negatel::(Double,Double)->Double->Double
@@ -207,13 +209,13 @@ mod a b
     |otherwise = a
 
 --simulates a whole Position List at a Shot
-simulatePosatShot::[[Maybe Double]]->Double->Double->Double->Double->Double->Double->Double->(Double,Double)->(Double,Double)->Double->Double->Double->Double->Double->[(Double,Double)]
-simulatePosatShot arena f_throw angle_throw t_throw f_floor cw p a v_old pos_old step m g t max
+simulatePosatShot::[[Maybe Double]]->Double->Double->Double->Double->Double->Double->Double->(Double,Double)->(Double,Double)->Double->Double->Double->Double->Double->Double->[(Double,Double)]
+simulatePosatShot arena f_throw angle_throw t_throw f_floor cw p a v_old pos_old step m g t max bouncefac
     |length arena == 0 || length (head arena) == 0  || fst pos_old < 0.11 || snd pos_old < 0.11 = [(1,1)]
     |t <= max && round (fst pos_old) < length (head arena) && round (snd pos_old) < length arena && fst pos_old > 0 && snd pos_old > 0=
-        let pos_pixl = (round (fst pos_old), round (snd pos_old))
-            pos_speed = getnewPosSpeedwithMap arena f_throw angle_throw t_throw f_floor cw p a v_old pos_pixl step m g t pos_old
-        in fst pos_speed : simulatePosatShot arena f_throw angle_throw t_throw f_floor cw p a (snd pos_speed) (fst pos_speed) step m g (t+step) max
+        let pos_pixl = (floor (fst pos_old), floor (snd pos_old))
+            pos_speed = getnewPosSpeedwithMap arena f_throw angle_throw t_throw f_floor cw p a v_old pos_pixl step m g t pos_old bouncefac
+        in fst pos_speed : simulatePosatShot arena f_throw angle_throw t_throw f_floor cw p a (snd pos_speed) (fst pos_speed) step m g (t+step) max bouncefac
     |otherwise = [(2,2)]
 
 --returns the item of a 1d List a at the Position pos
@@ -224,21 +226,21 @@ getfromPos2 :: [[a]] -> Int -> Int -> a
 getfromPos2 a posy posx = head $ take 1 $ drop posy $ head $ take 1 $ drop posx a
 
 --returns the new Speed at hill/air in addiction to the position in the map
-getnewSpeedwithMap :: [[Maybe Double]] -> Double -> Double -> Double -> Double -> Double -> Double -> Double -> (Double,Double) -> (Int,Int) -> Double -> Double -> Double -> Double -> (Double, Double)
-getnewSpeedwithMap arena f_throw angle_throw t_throw f_floor cw p a v_old pos_pixl step m g t
+getnewSpeedwithMap :: [[Maybe Double]] -> Double -> Double -> Double -> Double -> Double -> Double -> Double -> (Double,Double) -> (Int,Int) -> Double -> Double -> Double -> Double -> Double -> Bool -> (Double, Double)
+getnewSpeedwithMap arena f_throw angle_throw t_throw f_floor cw p a v_old pos_pixl step m g t bouncefac up
     |isNothing (getfromPos2 arena (fst pos_pixl) (snd pos_pixl)) = getnewSpeedatShot f_throw angle_throw m g cw a p t t_throw step v_old
-    |otherwise = getnewSpeedatHillwitht_throw f_floor (maybenormal (getfromPos2 arena (fst pos_pixl) (snd pos_pixl))) m g f_throw step v_old cw a p t_throw t
+    |otherwise = getnewSpeedatHillwitht_throw f_floor (maybenormal (getfromPos2 arena (fst pos_pixl) (snd pos_pixl))) m g f_throw step v_old cw a p t_throw t bouncefac up
 
 --returns the new Position at hill/air in addiction to the position in the map
-getnewPoswithMap::[[Maybe Double]]->Double->Double->Double->Double->Double->Double->Double->(Double,Double)->(Int,Int)->Double->Double->Double->Double->(Double,Double)->(Double,Double)
-getnewPoswithMap arena f_throw angle_throw t_throw f_floor cw p a v_old pos_pixl step m g t pos_old =
-    let v = getnewSpeedwithMap arena f_throw angle_throw t_throw f_floor cw p a v_old pos_pixl step m g t
+getnewPoswithMap::[[Maybe Double]]->Double->Double->Double->Double->Double->Double->Double->(Double,Double)->(Int,Int)->Double->Double->Double->Double->(Double,Double)->Double->(Double,Double)
+getnewPoswithMap arena f_throw angle_throw t_throw f_floor cw p a v_old pos_pixl step m g t pos_old bouncefac =
+    let v = getnewSpeedwithMap arena f_throw angle_throw t_throw f_floor cw p a v_old pos_pixl step m g t bouncefac (isUp (snd pos_old))
     in getnewPos v pos_old step
 
 --returns the new Position and the new Speed at hill/air in addiction to the position in the map
-getnewPosSpeedwithMap::[[Maybe Double]]->Double->Double->Double->Double->Double->Double->Double->(Double,Double)->(Int,Int)->Double->Double->Double->Double->(Double,Double)->((Double,Double),(Double,Double))
-getnewPosSpeedwithMap arena f_throw angle_throw t_throw f_floor cw p a v_old pos_pixl step m g t pos_old =
-    let v = getnewSpeedwithMap arena f_throw angle_throw t_throw f_floor cw p a v_old pos_pixl step m g t
+getnewPosSpeedwithMap::[[Maybe Double]]->Double->Double->Double->Double->Double->Double->Double->(Double,Double)->(Int,Int)->Double->Double->Double->Double->(Double,Double)->Double->((Double,Double),(Double,Double))
+getnewPosSpeedwithMap arena f_throw angle_throw t_throw f_floor cw p a v_old pos_pixl step m g t pos_old bouncefac=
+    let v = getnewSpeedwithMap arena f_throw angle_throw t_throw f_floor cw p a v_old pos_pixl step m g t bouncefac (isUp (snd pos_old))
     in (getnewPos v pos_old step, v)
 
 --converts something of type Maybe a to a or 0
@@ -284,8 +286,10 @@ stringto2dList string divider0 = onedto2dList (stringto1dList string divider0)
 
 --Converts a String (like "Just 5") to a Maybe (like Just 5)
 stringtoMaybe::String->Maybe Double
-stringtoMaybe ['J','u','s','t',' ',x] = Just (fromIntegral (digitToInt x) * 36.0)
+stringtoMaybe ['J','u','s','t',' ',x] = Just (fromIntegral (digitToInt x))
 stringtoMaybe "Nothing" = Nothing
+stringtoMaybe ['J','u','s','t',' ', x, y] = Just (fromIntegral (digitToInt x * 10 + digitToInt y))
+stringtoMaybe ['J','u','s','t',' ', x, y, z] = Just (fromIntegral (digitToInt x * 100 + digitToInt y * 10 + digitToInt z))
 
 --converts a List of Strings to a List of Maybes
 onedstringtoMaybe::[String]->[Maybe Double]
@@ -295,19 +299,19 @@ twodstringtoMaybe::[[String]]->[[Maybe Double]]
 twodstringtoMaybe = map onedstringtoMaybe
 
 --simulates all the Position from a arena got with a File
-simulatefromFile :: Double -> Double -> Double -> Double -> Double -> Double -> Double -> (Double,Double) -> (Double,Double) -> Double -> Double -> Double -> Double -> Double -> String -> Char -> Char -> IO [(Double,Double)]
-simulatefromFile f_throw angle_throw t_throw f_floor cw p a v_old pos_old step m g t  max filePath divider0 divider1 = do
+simulatefromFile :: Double -> Double -> Double -> Double -> Double -> Double -> Double -> (Double,Double) -> (Double,Double) -> Double -> Double -> Double -> Double -> Double -> String -> Char -> Char -> Double -> IO [(Double,Double)]
+simulatefromFile f_throw angle_throw t_throw f_floor cw p a v_old pos_old step m g t  max filePath divider0 divider1 bouncefac = do
     x <- fileto2dMaybe filePath divider0 divider1
-    return (simulatePosatShot x f_throw angle_throw t_throw f_floor cw p a v_old pos_old step m g t  max)
+    return (simulatePosatShot x f_throw angle_throw t_throw f_floor cw p a v_old pos_old step m g t max bouncefac)
 
 --gets the data out of the data File
-getdata :: String -> Char -> IO (Double, Double, Double, Double, Double, Double, Double, (Double, Double), (Double, Double), Double, Double, Double, Double, Double, String, Char, Char)
+getdata :: String -> Char -> IO (Double, Double, Double, Double, Double, Double, Double, (Double, Double), (Double, Double), Double, Double, Double, Double, Double, String, Char, Char, Double)
 getdata filePath divider = do
     l <- fileto1dList filePath divider
     let x = (read (head l) :: Double, read (getfromPos1 l 1) :: Double, read (getfromPos1 l 2) :: Double, read (getfromPos1 l 3) :: Double, read (getfromPos1 l 4) ::Double,
             read (getfromPos1 l 5) :: Double, read (getfromPos1 l 6) :: Double, stringToPair (getfromPos1 l 7) :: (Double,Double), stringToPair (getfromPos1 l 8) :: (Double,Double),
             read (getfromPos1 l 9) :: Double, read (getfromPos1 l 10) :: Double, read (getfromPos1 l 11) :: Double, read (getfromPos1 l 12) :: Double, read (getfromPos1 l 13) :: Double,
-            getfromPos1 l 14 :: String, head (getfromPos1 l 15) :: Char, head (getfromPos1 l 16) :: Char)
+            getfromPos1 l 14 :: String, head (getfromPos1 l 15) :: Char, head (getfromPos1 l 16) :: Char, read (getfromPos1 l 17) :: Double)
     return x
 
 --converts a String (like "(5.23,2.856)") to a Pair (like (5.23,2.856))
@@ -336,7 +340,7 @@ simulatefromFiles filePath_data = do
         (g1OQ (showDataTuple content 4)) (g1OQ (showDataTuple content 5)) (g1OQ (showDataTuple content 6)) (g2OQ (showDataTuple content 7))
         (g2OQ (showDataTuple content 8)) (g1OQ (showDataTuple content 9)) (g1OQ (showDataTuple content 10)) (g1OQ (showDataTuple content 11))
         (g1OQ (showDataTuple content 12)) (g1OQ (showDataTuple content 13)) (g3OQ (showDataTuple content 14)) (g4OQ (showDataTuple content 15))
-        (g4OQ (showDataTuple content 16))
+        (g4OQ (showDataTuple content 16)) (g1OQ (showDataTuple content 17))
 
 --reads a 2d Maybe List out of a File (map)
 fileto2dMaybe::String->Char->Char->IO [[Maybe Double]]
@@ -350,28 +354,29 @@ turnListAround [] = []
 turnListAround list = last list : turnListAround (init list)
 
 --ugly Data Tuple Stuff -> gives a data Point from given data Tuple and Position
-showDataTuple :: (Double, Double, Double, Double, Double, Double, Double, (Double,Double), (Double,Double), Double, Double, Double, Double, Double, String, Char, Char) -> Int -> (Maybe Double, Maybe (Double, Double), Maybe String, Maybe Char)
-showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) 0 = (Just x1, Nothing, Nothing, Nothing)
-showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) 1 = (Just x2, Nothing, Nothing, Nothing)
-showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) 2 = (Just x3, Nothing, Nothing, Nothing)
-showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) 3 = (Just x4, Nothing, Nothing, Nothing)
-showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) 4 = (Just x5, Nothing, Nothing, Nothing)
-showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) 5 = (Just x6, Nothing, Nothing, Nothing)
-showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) 6 = (Just x7, Nothing, Nothing, Nothing)
-showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) 7 = (Nothing, Just x8, Nothing, Nothing)
-showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) 8 = (Nothing, Just x9, Nothing, Nothing)
-showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) 9 = (Just x10, Nothing, Nothing, Nothing)
-showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) 10 = (Just x11, Nothing, Nothing, Nothing)
-showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) 11 = (Just x12, Nothing, Nothing, Nothing)
-showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) 12 = (Just x13, Nothing, Nothing, Nothing)
-showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) 13 = (Just x14, Nothing, Nothing, Nothing)
-showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) 14 = (Nothing, Nothing, Just x15, Nothing)
-showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) 15 = (Nothing, Nothing, Nothing, Just x16)
-showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) 16 = (Nothing, Nothing, Nothing, Just x17)
+showDataTuple :: (Double, Double, Double, Double, Double, Double, Double, (Double,Double), (Double,Double), Double, Double, Double, Double, Double, String, Char, Char, Double) -> Int -> (Maybe Double, Maybe (Double, Double), Maybe String, Maybe Char)
+showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18) 0 = (Just x1, Nothing, Nothing, Nothing)
+showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18) 1 = (Just x2, Nothing, Nothing, Nothing)
+showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18) 2 = (Just x3, Nothing, Nothing, Nothing)
+showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18) 3 = (Just x4, Nothing, Nothing, Nothing)
+showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18) 4 = (Just x5, Nothing, Nothing, Nothing)
+showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18) 5 = (Just x6, Nothing, Nothing, Nothing)
+showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18) 6 = (Just x7, Nothing, Nothing, Nothing)
+showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18) 7 = (Nothing, Just x8, Nothing, Nothing)
+showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18) 8 = (Nothing, Just x9, Nothing, Nothing)
+showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18) 9 = (Just x10, Nothing, Nothing, Nothing)
+showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18) 10 = (Just x11, Nothing, Nothing, Nothing)
+showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18) 11 = (Just x12, Nothing, Nothing, Nothing)
+showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18) 12 = (Just x13, Nothing, Nothing, Nothing)
+showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18) 13 = (Just x14, Nothing, Nothing, Nothing)
+showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18) 14 = (Nothing, Nothing, Just x15, Nothing)
+showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18) 15 = (Nothing, Nothing, Nothing, Just x16)
+showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18) 16 = (Nothing, Nothing, Nothing, Just x17)
+showDataTuple (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18) 17 = (Just x18, Nothing, Nothing, Nothing)
 
 --shows you all the data Points
-showAllDataTuple::(Double, Double, Double, Double, Double, Double, Double, (Double,Double), (Double,Double), Double, Double, Double, Double, Double, String, Char, Char)->Int->[(Maybe Double, Maybe (Double, Double), Maybe String, Maybe Char)]
-showAllDataTuple x 17 = []
+showAllDataTuple::(Double, Double, Double, Double, Double, Double, Double, (Double,Double), (Double,Double), Double, Double, Double, Double, Double, String, Char, Char, Double)->Int->[(Maybe Double, Maybe (Double, Double), Maybe String, Maybe Char)]
+showAllDataTuple x 18 = []
 showAllDataTuple x y = showDataTuple x y : showAllDataTuple x (y+1)
 
 --gives a Data Point from a data File
@@ -405,12 +410,18 @@ simulateAndWriteFromFile datafile resultfile = do
     x <- simulatefromFiles datafile
     writeFile resultfile (show x)
 
+isUp::Double -> Bool
+isUp a = (<) 0.5 $ afterDot a
+
+afterDot::Double -> Double
+afterDot a = (-) a $ fromInteger $ floor a
+
 test = simulatefromFile 0 1 2 3 4 5 6 (7,7) (8,8) 0.001 10 11 12 13 "hi.txt" '.' ','
 test2 = do
     x <- fileto2dMaybe "hi.txt" '.' ','
     return (length  x)
 
 test3 = do
-    (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) <- getdata "data.txt" ':'
+    (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18) <- getdata "data.txt" ':'
     print x2
     return x2

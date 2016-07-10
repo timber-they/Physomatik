@@ -31,7 +31,7 @@ namespace Physomatik_Forms
         int height = 0;
         int width = 0;
 
-        Pen[] colors = new Pen[10] { Pens.LightGreen, Pens.YellowGreen, Pens.LimeGreen,Pens.Green, Pens.SeaGreen, Pens.Blue, Pens.BlueViolet, Pens.DarkRed, Pens.IndianRed, Pens.Red };
+        Pen[] colors = new Pen[10] { Pens.LightGreen,  Pens.YellowGreen, Pens.LimeGreen,Pens.Green, Pens.SeaGreen, Pens.Blue, Pens.BlueViolet, Pens.DarkRed, Pens.IndianRed, Pens.Red };
 
         public Form1()
         {
@@ -677,6 +677,11 @@ namespace Physomatik_Forms
             if (!File.Exists("map.txt")) File.Create("map.txt");
             File.WriteAllText("map.txt", getcontents(umdrehen(Feld)));
             button5.Enabled = true;
+        }
+
+        private void Form1_MouseMove(object sender, MouseEventArgs e)
+        {
+            label19.Text = (e.X/fac).ToString() + " " + ((height-e.Y)/fac).ToString();
         }
     }
 }
