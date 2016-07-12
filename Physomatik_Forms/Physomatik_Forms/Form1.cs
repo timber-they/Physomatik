@@ -53,9 +53,7 @@ namespace Physomatik_Forms
             System.Globalization.CultureInfo customCulture = (System.Globalization.CultureInfo)System.Threading.Thread.CurrentThread.CurrentCulture.Clone();
             customCulture.NumberFormat.NumberDecimalSeparator = ".";
             System.Threading.Thread.CurrentThread.CurrentCulture = customCulture;
-            data = getsimulatedPossesFromFile("end.txt").ToArray();
             map = loadMap("map.txt");
-            pos = data.GetLength(0) - 6;
             Refresh();
         }
 
@@ -88,6 +86,11 @@ namespace Physomatik_Forms
                     button5.Visible = false;
                     pos += 4;
                     e.Graphics.DrawString(pos.ToString(), new Font(FontFamily.GenericSansSerif, 10), Brushes.Black, 100, 100);
+                    if(data == null)
+                    {
+                        data = getsimulatedPossesFromFile("end.txt").ToArray();
+                        pos = data.GetLength(0) - 6;
+                    }
                     if (File.Exists("end.txt") && pos < data.GetLength(0) - 1)
                     {
                         for (int i = 0; i < pos; i++)
@@ -589,11 +592,6 @@ namespace Physomatik_Forms
 
         private void button1_Click(object sender, EventArgs e)
         {
-            data_edit = false;
-            visualisation = true;
-            disable_dataStuff();
-            Refresh();
-            pos = data.GetLength(0) - 6;
             string content = File.ReadAllText("data.txt");
             string[] splitted = content.Split(':');
             string[] newdata = new string[splitted.Length];
@@ -608,14 +606,6 @@ namespace Physomatik_Forms
                 final += newdata[i] + ":";
             }
             File.WriteAllText("data.txt", final + newdata.Last());
-            Process p2 = new Process();
-            p2.StartInfo.FileName = "Haskell_calcs.exe";
-            p2.StartInfo.CreateNoWindow = true;
-            p2.Start();
-            p2.WaitForExit();
-            p2.Close();
-            data = getsimulatedPossesFromFile("end.txt").ToArray();
-            Refresh();
         }
         void edit_data(string file_Path)
         {
@@ -654,13 +644,13 @@ namespace Physomatik_Forms
 
         private void button4_Click(object sender, EventArgs e)
         {
-            visualisation = true;
             if (data_edit)
             {
                 data_edit = false;
                 disable_dataStuff();
                 Refresh();
             }
+            visualisation = true;
             Process p2 = new Process();
             p2.StartInfo.FileName = "Haskell_calcs.exe";
             p2.StartInfo.CreateNoWindow = true;
@@ -682,6 +672,11 @@ namespace Physomatik_Forms
         private void Form1_MouseMove(object sender, MouseEventArgs e)
         {
             label19.Text = (e.X/fac).ToString() + " " + ((height-e.Y)/fac).ToString();
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            Refresh();
         }
     }
 }
