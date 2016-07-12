@@ -1,0 +1,14 @@
+Version of workspace file format:
+               2
+Time of storage:
+               "Wed Jun  1 21:11:53 Mitteleurop\245ische Sommerzeit 2016"
+Name of the workspace:
+               "cabal-1.22.0.0-i386-unknown-mingw32.exe"
+File paths of contained packages:
+               ["C:\\Users\\Timo\\Desktop\\Haskell\\main_maybe_new\\first\\first.cabal","Physomatik\\Physomatik.cabal"]
+Maybe file path of an active package:
+               Just "C:\\Users\\Timo\\Desktop\\Haskell\\main_maybe_new\\first\\first.cabal"
+Maybe name of an active executable:
+               Nothing
+Version Control System configurations for packages:
+               fromList []

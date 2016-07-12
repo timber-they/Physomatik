@@ -644,11 +644,10 @@ namespace Physomatik_Forms
 
         private void button4_Click(object sender, EventArgs e)
         {
-            if (data_edit)
+            if (data_edit || label1.Enabled)
             {
-                data_edit = false;
                 disable_dataStuff();
-                Refresh();
+                data_edit = false;
             }
             visualisation = true;
             Process p2 = new Process();

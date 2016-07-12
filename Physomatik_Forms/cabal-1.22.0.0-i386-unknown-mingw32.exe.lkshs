@@ -1,0 +1,19 @@
+Version of session file format:
+               2
+Time of storage:
+               "Sat Jun 11 17:40:02 Mitteleurop\245ische Sommerzeit 2016"
+Layout:        VerticalP (TerminalP {paneGroups = fromList [], paneTabs = Just TopP, currentPage = 3, detachedId = Nothing, detachedSize = Nothing}) (HorizontalP (TerminalP {paneGroups = fromList [("Debug",HorizontalP (TerminalP {paneGroups = fromList [], paneTabs = Nothing, currentPage = -1, detachedId = Nothing, detachedSize = Nothing}) (TerminalP {paneGroups = fromList [], paneTabs = Just TopP, currentPage = -1, detachedId = Nothing, detachedSize = Nothing}) 122)], paneTabs = Just TopP, currentPage = 1, detachedId = Nothing, detachedSize = Nothing}) (TerminalP {paneGroups = fromList [], paneTabs = Just TopP, currentPage = 0, detachedId = Nothing, detachedSize = Nothing}) 325) 833
+Population:    [(Just (ErrorsSt (ErrorsState {showErrors = True, showWarnings = True, showSuggestions = True, showTestFails = True})),[SplitP RightP,SplitP TopP]),(Just (LogSt LogState),[SplitP RightP,SplitP BottomP]),(Just (ModulesSt (ModulesState 200 (SystemScope,False) (Nothing,Nothing) (ExpanderState {packageExp = ([],[]), packageExpNoBlack = ([],[]), packageDExp = ([],[]), packageDExpNoBlack = ([],[]), workspaceExp = ([],[]), workspaceExpNoBlack = ([],[]), workspaceDExp = ([],[]), workspaceDExpNoBlack = ([],[]), systemExp = ([],[]), systemExpNoBlack = ([],[])}))),[SplitP RightP,SplitP TopP]),(Just (BufferSt (BufferState "C:\\Users\\Timo\\Desktop\\Haskell\\Physomatik\\Physomatik\\Physomatik.cabal" 513)),[SplitP LeftP]),(Just (SearchSt (SearchState {searchString = "", searchScope = SystemScope, searchMode = Prefix {caseSense = False}})),[SplitP RightP,SplitP TopP]),(Just (BufferSt (BufferState "C:\\Users\\Timo\\Desktop\\Haskell\\Physomatik\\Physomatik\\Setup.hs" 87)),[SplitP LeftP]),(Just (InfoSt (InfoState Nothing)),[SplitP RightP,SplitP BottomP]),(Just (WorkspaceSt WorkspaceState),[SplitP RightP,SplitP BottomP]),(Just (BufferSt (BufferState "C:\\Users\\Timo\\Desktop\\Haskell\\main_maybe_new\\first\\src\\hello.hs" 6135)),[SplitP LeftP]),(Just (BufferSt (BufferState "C:\\Users\\Timo\\Desktop\\Haskell\\Physomatik\\Physomatik\\src\\hello.hs" 6157)),[SplitP LeftP]),(Just (BufferSt (BufferState "C:\\Users\\Timo\\Desktop\\Haskell\\mySite\\site.hs" 1549)),[SplitP LeftP])]
+Window size:   (1361,701)
+Full screen:   False
+Completion size:
+               (750,400)
+Workspace:     Just "C:\\Users\\Timo\\Desktop\\Haskell\\Physomatik\\cabal-1.22.0.0-i386-unknown-mingw32.exe.lkshw"
+Active pane:   Just "hello.hs(2)"
+Toolbar visible:
+               False
+FindbarState:  (True,FindState {entryStr = "head", entryHist = ["head","angle","getnewPos ","set","hello wi","hellowo","mymap"], replaceStr = "", replaceHist = [], caseSensitive = False, entireWord = False, wrapAround = True, regex = False, lineNr = 81})
+Recently opened files:
+               ["C:\\Users\\Timo\\Desktop\\Haskell\\Physomatik\\Physomatik\\src\\hello.hs","C:\\Users\\Timo\\Desktop\\Physomatik_Haskell\\Physomatik\\cabal.sandbox.config","C:\\Users\\Timo\\Desktop\\Physomatik_Haskell\\Physomatik\\Physomatik.cabal","C:\\Users\\Timo\\Desktop\\Physomatik_Haskell\\Physomatik\\src\\Main.hs","C:\\Users\\Timo\\Desktop\\Physomatik_Haskell\\Physomatik\\test\\Main.hs","C:\\Users\\Timo\\Desktop\\Haskell\\main_maybe_new\\first\\Setup.hs","C:\\Users\\Timo\\Desktop\\Haskell\\main_maybe_new\\cabal-1.22.0.0-i386-unknown-mingw32.exe.lkshw","C:\\Users\\Timo\\Desktop\\Haskell\\main_maybe_new\\first\\first.cabal","C:\\Users\\Timo\\Desktop\\Haskell\\main_maybe_new\\first\\src\\hello.hs","C:\\Users\\Timo\\Desktop\\Haskell\\cabal-1.22.0.0-i386-unknown-mingw32.exe","C:\\Users\\Timo\\Desktop\\Haskell\\Main_maybe\\Main\\test\\Main.hs","C:\\Users\\Timo\\Desktop\\Haskell\\Main_maybe\\Main\\src\\Main.hs"]
+Recently opened workspaces:
+               ["C:\\Users\\Timo\\Desktop\\Haskell\\main_maybe_new\\cabal-1.22.0.0-i386-unknown-mingw32.exe.lkshw"]
