@@ -303,6 +303,31 @@ simulatefromFile :: Double -> Double -> Double -> Double -> Double -> Double -> 
 simulatefromFile f_throw angle_throw t_throw f_floor cw p a v_old pos_old step m g t  max filePath divider0 divider1 bouncefac = do
     x <- fileto2dMaybe filePath divider0 divider1
     return (simulatePosatShot x f_throw angle_throw t_throw f_floor cw p a v_old pos_old step m g t max bouncefac)
+simulatefromFilev :: Double -> Double -> Double -> Double -> Double -> Double -> Double -> (Double,Double) -> (Double,Double) -> Double -> Double -> Double -> Double -> Double -> String -> Char -> Char -> Double -> IO [(Double,Double)]
+simulatefromFilev f_throw angle_throw t_throw f_floor cw p a v_old pos_old step m g t  max filePath divider0 divider1 bouncefac = do
+    x <- filetovectorList filePath divider0 divider1
+    return []
+
+filetovectorList::String -> Char -> Char -> IO [((Double, Double),(Double, Double))]
+filetovectorList filePath divider0 divider1 = do
+    content <- readFile filePath
+    return (stringto2dTupleList content divider0 divider1)
+
+--reads a 2d Maybe List out of a File (map)
+fileto2dMaybe::String->Char->Char->IO [[Maybe Double]]
+fileto2dMaybe filePath divider0 divider1 = do
+    x <- fileto2dList filePath divider0 divider1
+    return (turnListAround(twodstringtoMaybe x))
+
+stringto2dTupleList::String -> Char -> Char -> [((Double, Double),(Double, Double))]
+stringto2dTupleList string divider0 divider1 = stringListto2dTupleList (stringto1dList string divider0) divider1
+
+stringListto2dTupleList::[String] -> Char -> [((Double,Double),(Double,Double))]
+stringListto2dTupleList [] divider = []
+stringListto2dTupleList strings divider = (purestringtoPair (head strings) divider, purestringtoPair (head (tail strings)) divider) : stringListto2dTupleList (tail (tail strings)) divider
+
+purestringtoPair::String -> Char -> (Double,Double)
+purestringtoPair string divider = (read (stringUntily string divider), read (stringFromy string divider))
 
 --gets the data out of the data File
 getdata :: String -> Char -> IO (Double, Double, Double, Double, Double, Double, Double, (Double, Double), (Double, Double), Double, Double, Double, Double, Double, String, Char, Char, Double)
@@ -341,12 +366,6 @@ simulatefromFiles filePath_data = do
         (g2OQ (showDataTuple content 8)) (g1OQ (showDataTuple content 9)) (g1OQ (showDataTuple content 10)) (g1OQ (showDataTuple content 11))
         (g1OQ (showDataTuple content 12)) (g1OQ (showDataTuple content 13)) (g3OQ (showDataTuple content 14)) (g4OQ (showDataTuple content 15))
         (g4OQ (showDataTuple content 16)) (g1OQ (showDataTuple content 17))
-
---reads a 2d Maybe List out of a File (map)
-fileto2dMaybe::String->Char->Char->IO [[Maybe Double]]
-fileto2dMaybe filePath divider0 divider1 = do
-    x <- fileto2dList filePath divider0 divider1
-    return (turnListAround(twodstringtoMaybe x))
 
 --returns the List turned around
 turnListAround::[a]->[a]
@@ -410,9 +429,11 @@ simulateAndWriteFromFile datafile resultfile = do
     x <- simulatefromFiles datafile
     writeFile resultfile (show x)
 
+--Checks, wether Ralf is at the upper or downer part of the floor
 isUp::Double -> Double -> Double -> Bool
 isUp x y a = afterDot y > (tan(toRadian (betterAngle a)) * (afterDot x - 0.5) + 0.5)
 
+--makes the angle better
 correctAngle::Double->Double->Double
 correctAngle a b    |b < 0 = betterAngle (a + 180)
                     |otherwise = betterAngle a
@@ -421,8 +442,39 @@ betterAngle a   | a > 360 = betterAngle (a-360)
                 | a < 0 = betterAngle (a + 360)
                 |otherwise = a
 
+--all digits after the dot
 afterDot::Double -> Double
 afterDot a = (-) a $ fromInteger $ floor a
+
+isonline::(Double,Double) -> (Double, Double) -> (Double, Double) -> Double -> Bool
+isonline a b p s = isonlinec a b p s (fst p - 0.9*s)
+--checks, wether it touches the vector orianted line (start line, end line, position of Ralf, size of Ralf, startx)
+isonlinec::(Double,Double) -> (Double, Double) -> (Double, Double) -> Double -> Double -> Bool
+isonlinec a b p s x |x + s > max (fst a) (fst b) && x - s < max (fst a) (fst b) = fst p + s > x && fst p - s < x && snd p + s > rightesty a b && snd p - s < rightesty a b
+                    |x + s > min (fst a) (fst b) && x - s < min (fst a) (fst b) = fst p + s > x && fst p - s < x && snd p + s > leftesty a b && snd p - s < leftesty a b
+                    |isbetween a b p = 
+                        let y = getm a b * (x - min (fst a) (fst b)) + leftesty a b
+                        in fst p + s > x && fst p - s < x && snd p + s > y && snd p - s < y || fst p + s > x && isonlinec a b p s (x + s / 10)
+                    |otherwise = False
+
+isbetween::(Double, Double) -> (Double, Double) -> (Double, Double) -> Bool
+isbetween a b c = fst c > min (fst a) (fst b) && fst c < max (fst a) (fst b) && snd c > leftesty a b && snd c < rightesty a b
+
+getm::(Double, Double) -> (Double, Double) -> Double
+getm a b = (/) (snd a - snd b) (fst a - fst b)
+
+getdelta::Double -> Double -> Double
+getdelta a b = abs (a - b)
+
+rightesty::(Double, Double) -> (Double, Double) -> Double
+rightesty a b = booltoDouble(fst a > fst b) * snd a + booltoDouble(fst b >= fst a) * snd b
+
+leftesty::(Double, Double) -> (Double, Double) -> Double
+leftesty a b = booltoDouble(fst a < fst b) * snd a + booltoDouble(fst b <= fst a) * snd b
+
+booltoDouble::Bool -> Double
+booltoDouble True = 1;
+booltoDouble False = 0;
 
 test = simulatefromFile 0 1 2 3 4 5 6 (7,7) (8,8) 0.001 10 11 12 13 "hi.txt" '.' ','
 test2 = do
