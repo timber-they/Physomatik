@@ -18,6 +18,7 @@ namespace Physomatik_Forms
         bool marked = false;
         int[,] Feld;
         List<float[]> marks = new List<float[]>();
+        List<float[]> vectors = new List<float[]>();
         int nauflösung = 5;
 
         int pos = 0;
@@ -53,7 +54,8 @@ namespace Physomatik_Forms
             System.Globalization.CultureInfo customCulture = (System.Globalization.CultureInfo)System.Threading.Thread.CurrentThread.CurrentCulture.Clone();
             customCulture.NumberFormat.NumberDecimalSeparator = ".";
             System.Threading.Thread.CurrentThread.CurrentCulture = customCulture;
-            map = loadMap("map.txt");
+            //map = loadMap("map.txt");
+            vectors = loadvectors("map.txt");
             Refresh();
         }
 
@@ -61,13 +63,18 @@ namespace Physomatik_Forms
         {
             if (!data_edit)
             {
-                for (int y = 0; y < map.GetLength(0); y++)
+                //    for (int y = 0; y < map.GetLength(0); y++)
+                //    {
+                //        for (int x = 0; x < map.GetLength(1); x++)
+                //        {
+                //            if (map[y, x] >= 0)
+                //                e.Graphics.FillRectangle(Brushes.Red, x * fac, y * fac, fac, fac);
+                //        }
+                //    }
+                if(vectors != null)
+                for (int i = 0; i < vectors.Count - 1; i += 2)
                 {
-                    for (int x = 0; x < map.GetLength(1); x++)
-                    {
-                        if (map[y, x] >= 0)
-                            e.Graphics.FillRectangle(Brushes.Red, x * fac, y * fac, fac, fac);
-                    }
+                    e.Graphics.DrawLine(Pens.Black, vectors.ElementAt(i)[0], vectors.ElementAt(i)[1], vectors.ElementAt(i + 1)[0], vectors.ElementAt(i + 1)[1]);
                 }
                 if (!visualisation)
                 {
@@ -96,6 +103,7 @@ namespace Physomatik_Forms
                         for (int i = 0; i < pos; i++)
                         {
                             e.Graphics.DrawLine(colors[(int)((double)(colors.Length*i/pos))], fac * (float)data[i][0], height - (float)(fac * data[i][1]), fac * (float)data[i + 1][0], height - (float)(fac * data[i + 1][1]));
+                            e.Graphics.DrawRectangle(colors[(int)((double)(colors.Length * i / pos))], fac * (float)data[i][0], height - (float)(fac * data[i][1]), (float)Math.Sqrt(0.1) / 2, (float)Math.Sqrt(0.1) / 2);
                         }
                         e.Graphics.DrawString((fac * data[pos][0]).ToString() + " " + (fac * data[pos][1]).ToString(), new Font(FontFamily.GenericMonospace, 10), Brushes.Black, 10, 10);
                     }
@@ -306,6 +314,24 @@ namespace Physomatik_Forms
             }
         }
 
+        List<float[]> loadvectors (string filePath)
+        {
+            List<float[]> final = new List<float[]>();
+            if (File.Exists(filePath))
+            {
+                string content = File.ReadAllText(filePath);
+                if (content == "") return null;
+                string[] splitted = content.Split(';');
+                foreach (string item in splitted)
+                {
+                    string[] temp = item.Split(',');
+                    final.Add(new float[2] { (float)Convert.ToDouble(temp[0])*fac, (float)(height - (Convert.ToDouble(temp[1]))*fac) });
+                }
+                return final;
+            }
+            else return null;
+        }
+
         double[] stringtoDoubles(string content)
         {
             string[] splitted = content.Split(',');
@@ -368,7 +394,7 @@ namespace Physomatik_Forms
         {
             float[] first = new float[2] { firstt[0], height - firstt[1] }, second = new float[2] { secondt[0], height - secondt[1] };
             float mg = (second[1] - first[1]) / (second[0] - first[0]);
-            int a = (int)(ToDegree(Math.Atan((second[1] - first[1]) / (second[0] - first[0]))));
+            int a = (int)(ToDegree(Math.Atan(mg)));
             while (a >= 360) a -= 360;
             while (a < 0) a += 360;
             if (first[0] < second[0])
@@ -658,13 +684,45 @@ namespace Physomatik_Forms
             data = getsimulatedPossesFromFile("end.txt").ToArray();
             pos = data.GetLength(0) - 6;
             Refresh();
+            disable_dataStuff();
+        }
+
+        string getvectordata(List<float[]> marks)
+        {
+            string final = "";
+            foreach (float[] item in marks)
+            {
+                final += "" + (item[0]/ fac) + "," + ((height - item[1])/ fac) + ";";
+            }
+            return withoutlast(final);
+        }
+
+        string withoutlast(string a)
+        {
+            char[] b = a.ToCharArray();
+            if (b.Length > 0)
+            {
+                char[] c = new char[a.Length - 1];
+                for (int i = 0; i < c.Length; i++)
+                {
+                    c[i] = b[i];
+                }
+                string final = "";
+                foreach (var item in c)
+                {
+                    final += "" + item;
+                }
+                return final;
+            }
+            else return a;
         }
 
         private void button5_Click(object sender, EventArgs e)
         {
             button5.Enabled = false;
             if (!File.Exists("map.txt")) File.Create("map.txt");
-            File.WriteAllText("map.txt", getcontents(umdrehen(Feld)));
+            //File.WriteAllText("map.txt", getcontents(umdrehen(Feld)));
+            File.WriteAllText("map.txt", getvectordata(marks));
             button5.Enabled = true;
         }
 
