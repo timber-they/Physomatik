@@ -1,14 +1,15 @@
 --nc -> not controlled
 --hc -> hopefully correct
-module Main (main) where
-
 import Data.Maybe
 import Data.Data
 import System.IO
 import Data.Char
 import Control.Monad
+import Criterion.Main
 
-main = do 
+--benchmarked functions
+
+main2 = do 
     simulateAndWriteFromFile "data.txt" "end.txt" True
 
 g::Double
@@ -474,11 +475,11 @@ afterDot::Double -> Double
 afterDot a = (-) a $ fromInteger $ floor a
 
 isonline::(Double,Double) -> (Double, Double) -> (Double, Double) -> Double -> Bool
-isonline a b p s = isonlinec (leftestpoint a b) (rightestpoint a b) p s (fst p - s)
---checks, wether it touches the vector orianted line (start line, end line, position of Ralf, size of Ralf, startx) - ax < bx
+isonline a b p s = isonlinec a b p s (fst p - s)
+--checks, wether it touches the vector orianted line (start line, end line, position of Ralf, size of Ralf, startx)
 isonlinec::(Double,Double) -> (Double, Double) -> (Double, Double) -> Double -> Double -> Bool
-isonlinec a b p s x | x > fst b || fst p + s < fst a || fst p - s > fst b || snd p + s < min (snd a) (snd b) || snd p - s > max (snd a) (snd b) || x > fst p + s = False
-                    |isinMiddle (snd p - s) (snd p + s) (getm a b * (x - fst a) + snd a) = True
+isonlinec a b p s x | x > max (fst a) (fst b) || fst p + s < min (fst a) (fst b) || fst p - s > max (fst a) (fst b) || snd p + s < min (snd a) (snd b) || snd p - s > max (snd a) (snd b)= False
+                    |isinMiddle (fst p - s) (fst p + s) x && isinMiddle (snd p - s) (snd p + s) (getm a b * (x - min (fst a) (fst b)) + leftesty a b) = True
                     |otherwise = isonlinec a b p s (x + s / 10)
 
 isonsomelineandhow :: (Double,Double) -> [((Double,Double),(Double,Double))] -> Double -> (Bool, Double)
@@ -492,10 +493,11 @@ isbetween::(Double, Double) -> (Double, Double) -> (Double, Double) -> Bool
 isbetween a b c = fst c >= min (fst a) (fst b) && fst c <= max (fst a) (fst b) && snd c >= leftesty a b && snd c <= rightesty a b
 
 isinMiddle :: Double -> Double -> Double -> Bool
-isinMiddle a b c = (&&) (b >= c) (a <= c)
+isinMiddle a b c    | max a b >= c && min a b <= c = True
+                    |otherwise = False
 
 getm::(Double, Double) -> (Double, Double) -> Double
-getm a b = (/) ((-) (snd b) (snd a)) ((-) (fst b) (fst a))
+getm a b = (/) (rightesty a b - leftesty a b) (getdelta (fst a) (fst b))
 
 getanglewithm::(Double, Double) -> (Double, Double) -> Double
 getanglewithm a b = betterAngle $ toDegree $ atan $ getm a b
@@ -509,13 +511,14 @@ rightesty a b = booltoDouble(fst a > fst b) * snd a + booltoDouble(fst b >= fst 
 leftesty::(Double, Double) -> (Double, Double) -> Double
 leftesty a b = booltoDouble(fst a < fst b) * snd a + booltoDouble(fst b <= fst a) * snd b
 
-leftestpoint ::(Double,Double) -> (Double,Double) -> (Double,Double)
-leftestpoint a b = (min (fst a) (fst b), leftesty a b)
-rightestpoint :: (Double,Double) -> (Double,Double) -> (Double,Double)
-rightestpoint a b = (max (fst a) (fst b), rightesty a b)
-
 booltoDouble::Bool -> Double
 booltoDouble True = 1;
 booltoDouble False = 0;
 
 test = simulatefromFiles "data.txt" True
+
+--benchmark harness
+
+main = defaultMain [
+    bgroup "main2" []
+    ]

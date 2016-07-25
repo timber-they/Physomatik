@@ -110,7 +110,7 @@ getSpeedatShot fthrow anglethrow m g cw a p t t_throw step
 --returns the new Speed at a Shot
 getnewSpeedatShot::Double->Double->Double->Double->Double->Double->Double->Double->Double->Double->(Double,Double)->(Double,Double)
 getnewSpeedatShot fthrow anglethrow m g cw a p t t_throw step v
-    |t <= 0 = (0,0)
+    |t < 0 = (0,0)
     |otherwise =
         let fs = getresVector [(getFG m g, 270), (fthrow * notbigger01 t t_throw , anglethrow),(getFL cw a p (fst v), snd v + 180)]
         in getnewSpeedvec v fs step m
@@ -240,7 +240,7 @@ getnewSpeedwithMap arena f_throw angle_throw t_throw f_floor cw p a v_old pos_pi
     |otherwise = getnewSpeedatHillwitht_throw f_floor (maybenormal (getfromPos2 arena (fst pos_pixl) (snd pos_pixl))) m g f_throw step v_old cw a p t_throw t bouncefac up
 getnewSpeedwithVectors :: [((Double,Double),(Double,Double))] -> Double -> Double -> Double -> Double -> Double -> Double -> Double -> (Double,Double) -> (Double,Double) -> Double -> Double -> Double -> Double -> Double -> (Double, Double)
 getnewSpeedwithVectors arenav f_throw angle_throw t_throw f_floor cw p a v_old pos_old step m g t bouncefac
-    |fst between = getnewSpeedatHillwitht_throw f_floor (snd between) m g f_throw step v_old cw a p t_throw t bouncefac (getyPart v_old > 0)
+    |fst between = getnewSpeedatHillwitht_throw f_floor (snd between) m g f_throw step v_old cw a p t_throw t bouncefac (getyPart v_old < 0)
     |otherwise =  getnewSpeedatShot f_throw angle_throw m g cw a p t t_throw step v_old
         where between = isonsomelineandhow pos_old arenav (sqrt a / 2)
 
@@ -483,12 +483,10 @@ isonlinec a b p s x | x > max (fst a) (fst b) || fst p + s < min (fst a) (fst b)
 
 isonsomelineandhow :: (Double,Double) -> [((Double,Double),(Double,Double))] -> Double -> (Bool, Double)
 isonsomelineandhow pos [] s = (False, 0)
-isonsomelineandhow pos y s = 
+isonsomelineandhow pos (x:xs) s = 
     if isonline (fst x) (snd x) pos s
-    then (True, (getm (fst x) (snd x)))
+    then (True, (getanglewithm (fst x) (snd x)))
     else isonsomelineandhow pos xs s
-        where   x = head y
-                xs = tail y
 
 isbetween::(Double, Double) -> (Double, Double) -> (Double, Double) -> Bool
 isbetween a b c = fst c >= min (fst a) (fst b) && fst c <= max (fst a) (fst b) && snd c >= leftesty a b && snd c <= rightesty a b
@@ -498,7 +496,10 @@ isinMiddle a b c    | max a b >= c && min a b <= c = True
                     |otherwise = False
 
 getm::(Double, Double) -> (Double, Double) -> Double
-getm a b = (/) (snd a - snd b) (fst a - fst b)
+getm a b = (/) (rightesty a b - leftesty a b) (getdelta (fst a) (fst b))
+
+getanglewithm::(Double, Double) -> (Double, Double) -> Double
+getanglewithm a b = betterAngle $ toDegree $ atan $ getm a b
 
 getdelta::Double -> Double -> Double
 getdelta a b = abs (a - b)
