@@ -8,6 +8,8 @@ import System.IO
 import Data.Char
 import Control.Monad
 
+data Ralf = Ralf{pos :: (Double,Double), m :: Double, v :: (Double,Double), a :: Double, cw :: Double, bouncefac :: Double} deriving (Show)
+
 main = do 
     simulateAndWriteFromFile "data.txt" "end.txt" True
 
@@ -209,23 +211,6 @@ mod a b
     |a > b = Main.mod (a-b) b
     |otherwise = a
 
---simulates a whole Position List at a Shot
-simulatePosatShot::[[Maybe Double]]->Double->Double->Double->Double->Double->Double->Double->(Double,Double)->(Double,Double)->Double->Double->Double->Double->Double->Double->[(Double,Double)]
-simulatePosatShot arena f_throw angle_throw t_throw f_floor cw p a v_old pos_old step m g t max bouncefac
-    |length arena == 0 || length (head arena) == 0  || fst pos_old < 0.11 || snd pos_old < 0.11 = [(1,1)]
-    |t <= max && round (fst pos_old) < length (head arena) && round (snd pos_old) < length arena && fst pos_old > 0 && snd pos_old > 0=
-        let pos_pixl = (floor (fst pos_old), floor (snd pos_old))
-            pos_speed = getnewPosSpeedwithMap arena f_throw angle_throw t_throw f_floor cw p a v_old pos_pixl step m g t pos_old bouncefac
-        in fst pos_speed : simulatePosatShot arena f_throw angle_throw t_throw f_floor cw p a (snd pos_speed) (fst pos_speed) step m g (t+step) max bouncefac
-    |otherwise = [(2,2)]
-simulatePosatShotv::[((Double,Double),(Double,Double))]->Double->Double->Double->Double->Double->Double->Double->(Double,Double)->(Double,Double)->Double->Double->Double->Double->Double->Double->[(Double,Double)]
-simulatePosatShotv arenav f_throw angle_throw t_throw f_floor cw p a v_old pos_old step m g t max bouncefac
-    |t <= max = 
-        let pos_speed = getnewPosSpeedwithVectors arenav f_throw angle_throw t_throw f_floor cw p a v_old step m g t pos_old bouncefac
-        in  fst pos_speed : simulatePosatShotv arenav f_throw angle_throw t_throw f_floor cw p a (snd pos_speed) (fst pos_speed) step m g (t+step) max bouncefac
-    |otherwise = []
-
-
 --returns the item of a 1d List a at the Position pos
 getfromPos1 ::[a] -> Int -> a
 getfromPos1 a pos = head (take 1 (drop pos a))
@@ -233,32 +218,11 @@ getfromPos1 a pos = head (take 1 (drop pos a))
 getfromPos2 :: [[a]] -> Int -> Int -> a
 getfromPos2 a posy posx = head $ take 1 $ drop posy $ head $ take 1 $ drop posx a
 
---returns the new Speed at hill/air in addiction to the position in the map
-getnewSpeedwithMap :: [[Maybe Double]] -> Double -> Double -> Double -> Double -> Double -> Double -> Double -> (Double,Double) -> (Int,Int) -> Double -> Double -> Double -> Double -> Double -> Bool -> (Double, Double)
-getnewSpeedwithMap arena f_throw angle_throw t_throw f_floor cw p a v_old pos_pixl step m g t bouncefac up
-    |isNothing (getfromPos2 arena (fst pos_pixl) (snd pos_pixl)) = getnewSpeedatShot f_throw angle_throw m g cw a p t t_throw step v_old
-    |otherwise = getnewSpeedatHillwitht_throw f_floor (maybenormal (getfromPos2 arena (fst pos_pixl) (snd pos_pixl))) m g f_throw step v_old cw a p t_throw t bouncefac up
-getnewSpeedwithVectors :: [((Double,Double),(Double,Double))] -> Double -> Double -> Double -> Double -> Double -> Double -> Double -> (Double,Double) -> (Double,Double) -> Double -> Double -> Double -> Double -> Double -> (Double, Double)
-getnewSpeedwithVectors arenav f_throw angle_throw t_throw f_floor cw p a v_old pos_old step m g t bouncefac
-    |fst between = getnewSpeedatHillwitht_throw f_floor (snd between) m g f_throw step v_old cw a p t_throw t bouncefac (getyPart v_old < 0)
-    |otherwise =  getnewSpeedatShot f_throw angle_throw m g cw a p t t_throw step v_old
-        where between = isonsomelineandhow pos_old arenav (sqrt a / 2)
-
 --returns the new Position at hill/air in addiction to the position in the map
 getnewPoswithMap::[[Maybe Double]]->Double->Double->Double->Double->Double->Double->Double->(Double,Double)->(Int,Int)->Double->Double->Double->Double->(Double,Double)->Double->(Double,Double)
 getnewPoswithMap arena f_throw angle_throw t_throw f_floor cw p a v_old pos_pixl step m g t pos_old bouncefac =
     let v = getnewSpeedwithMap arena f_throw angle_throw t_throw f_floor cw p a v_old pos_pixl step m g t bouncefac (isUp (fst pos_old) (snd pos_old) (maybenormal (getfromPos2 arena (fst pos_pixl) (snd pos_pixl))))
     in getnewPos v pos_old step
-
---returns the new Position and the new Speed at hill/air in addiction to the position in the map
-getnewPosSpeedwithMap::[[Maybe Double]]->Double->Double->Double->Double->Double->Double->Double->(Double,Double)->(Int,Int)->Double->Double->Double->Double->(Double,Double)->Double->((Double,Double),(Double,Double))
-getnewPosSpeedwithMap arena f_throw angle_throw t_throw f_floor cw p a v_old pos_pixl step m g t pos_old bouncefac =
-    let v = getnewSpeedwithMap arena f_throw angle_throw t_throw f_floor cw p a v_old pos_pixl step m g t bouncefac (isUp (fst pos_old) (snd pos_old) (maybenormal (getfromPos2 arena (fst pos_pixl) (snd pos_pixl))))
-    in (getnewPos v pos_old step, v)
-getnewPosSpeedwithVectors::[((Double,Double),(Double,Double))]->Double->Double->Double->Double->Double->Double->Double->(Double,Double)->Double->Double->Double->Double->(Double,Double)->Double->((Double,Double),(Double,Double))
-getnewPosSpeedwithVectors arenav f_throw angle_throw t_throw f_floor cw p a v_old step m g t pos_old bouncefac =
-    let v = getnewSpeedwithVectors arenav f_throw angle_throw t_throw f_floor cw p a v_old pos_old step m g t bouncefac
-    in (getnewPos v pos_old step, v)
 
 --converts something of type Maybe a to a or 0
 maybenormal::Num a => Maybe a -> a
@@ -316,16 +280,6 @@ onedstringtoMaybe = map stringtoMaybe
 twodstringtoMaybe::[[String]]->[[Maybe Double]]
 twodstringtoMaybe = map onedstringtoMaybe
 
---simulates all the Position from a arena got with a File
-simulatefromFile :: Double -> Double -> Double -> Double -> Double -> Double -> Double -> (Double,Double) -> (Double,Double) -> Double -> Double -> Double -> Double -> Double -> String -> Char -> Char -> Double -> IO [(Double,Double)]
-simulatefromFile f_throw angle_throw t_throw f_floor cw p a v_old pos_old step m g t  max filePath divider0 divider1 bouncefac = do
-    x <- fileto2dMaybe filePath divider0 divider1
-    return (simulatePosatShot x f_throw angle_throw t_throw f_floor cw p a v_old pos_old step m g t max bouncefac)
-simulatefromFilev :: Double -> Double -> Double -> Double -> Double -> Double -> Double -> (Double,Double) -> (Double,Double) -> Double -> Double -> Double -> Double -> Double -> String -> Char -> Char -> Double -> IO [(Double,Double)]
-simulatefromFilev f_throw angle_throw t_throw f_floor cw p a v_old pos_old step m g t  max filePath divider0 divider1 bouncefac = do
-    x <- filetovectorList filePath divider0 divider1
-    return (simulatePosatShotv x f_throw angle_throw t_throw f_floor cw p a v_old pos_old step m g t max bouncefac)
-
 filetovectorList::String -> Char -> Char -> IO [((Double, Double),(Double, Double))]
 filetovectorList filePath divider0 divider1 = do
     content <- readFile filePath
@@ -374,25 +328,75 @@ stringFromy (x:xs) y
     |x == y = xs
     |otherwise = stringFromy xs y
 
+--returns the new Speed at hill/air in addiction to the position in the map
+getnewSpeedwithMap :: [[Maybe Double]] -> Double -> Double -> Double -> Double -> Double -> Double -> Double -> (Double,Double) -> (Int,Int) -> Double -> Double -> Double -> Double -> Double -> Bool -> (Double, Double)
+getnewSpeedwithMap arena f_throw angle_throw t_throw f_floor cw p a v_old pos_pixl step m g t bouncefac up
+    |isNothing (getfromPos2 arena (fst pos_pixl) (snd pos_pixl)) = getnewSpeedatShot f_throw angle_throw m g cw a p t t_throw step v_old
+    |otherwise = getnewSpeedatHillwitht_throw f_floor (maybenormal (getfromPos2 arena (fst pos_pixl) (snd pos_pixl))) m g f_throw step v_old cw a p t_throw t bouncefac up
+getnewSpeedwithVectors :: Ralf -> [((Double,Double),(Double,Double))] -> Double -> Double -> Double -> Double -> Double -> Double -> Double -> Double -> (Double, Double)
+getnewSpeedwithVectors ralf arenav f_throw angle_throw t_throw f_floor p step g t
+    |fst between = getnewSpeedatHillwitht_throw f_floor (snd between) (m ralf) g f_throw step (v ralf) (cw ralf) (a ralf) p t_throw t (bouncefac ralf) (getyPart (v ralf) < 0)
+    |otherwise =  getnewSpeedatShot f_throw angle_throw (m ralf) g (cw ralf) (a ralf) p t t_throw step (v ralf)
+        where between = isonsomelineandhow (pos ralf) arenav (sqrt (a ralf) / 2)
+
+--returns the new Position and the new Speed at hill/air in addiction to the position in the map
+getnewPosSpeedwithMap::Ralf->[[Maybe Double]]->Double->Double->Double->Double->Double->(Int,Int)->Double->Double->Double->((Double,Double),(Double,Double))
+getnewPosSpeedwithMap ralf arena f_throw angle_throw t_throw f_floor p pos_pixl step g t =
+    let vn = getnewSpeedwithMap arena f_throw angle_throw t_throw f_floor (cw ralf) p (a ralf) (v ralf) pos_pixl step (m ralf) g t (bouncefac ralf) (isUp (fst (pos ralf)) (snd (pos ralf)) (maybenormal (getfromPos2 arena (fst pos_pixl) (snd pos_pixl))))
+    in (getnewPos vn (pos ralf) step, vn)
+getnewPosSpeedwithVectors::Ralf->[((Double,Double),(Double,Double))]->Double->Double->Double->Double->Double->Double->Double->Double->((Double,Double),(Double,Double))
+getnewPosSpeedwithVectors ralf arenav f_throw angle_throw t_throw f_floor p step g t =
+    let vn = getnewSpeedwithVectors ralf arenav f_throw angle_throw t_throw f_floor p step g t
+    in (getnewPos vn (pos ralf) step, vn)
+
+--simulates a whole Position List at a Shot
+simulatePosatShot::Ralf->[[Maybe Double]]->Double->Double->Double->Double->Double->Double->Double->Double->Double->[(Double,Double)]
+simulatePosatShot ralf arena f_throw angle_throw t_throw f_floor p step g t max
+    |length arena == 0 || length (head arena) == 0  || fst (pos ralf) < 0.11 || snd (pos ralf) < 0.11 = [(1,1)]
+    |t <= max && round (fst (pos ralf)) < length (head arena) && round (snd (pos ralf)) < length arena && fst (pos ralf) > 0 && snd (pos ralf) > 0=
+        let pos_pixl = (floor (fst (pos ralf)), floor (snd (pos ralf)))
+            pos_speed = getnewPosSpeedwithMap ralf arena f_throw angle_throw t_throw f_floor p pos_pixl step g t
+        in fst pos_speed : simulatePosatShot Ralf {pos = fst pos_speed, m = m ralf, v = snd pos_speed, a = a ralf, cw = cw ralf, bouncefac = bouncefac ralf} arena f_throw angle_throw t_throw f_floor p step g (t+step) max
+    |otherwise = [(2,2)]
+simulatePosatShotv::Ralf->[((Double,Double),(Double,Double))]->Double->Double->Double->Double->Double->Double->Double->Double->Double->[(Double,Double)]
+simulatePosatShotv ralf arenav f_throw angle_throw t_throw f_floor p step g t max
+    |t <= max = 
+        let pos_speed = getnewPosSpeedwithVectors ralf arenav f_throw angle_throw t_throw f_floor p step g t
+        in  fst pos_speed : simulatePosatShotv Ralf {pos = fst pos_speed, m = m ralf, v = snd pos_speed, a = a ralf, cw = cw ralf, bouncefac = bouncefac ralf} arenav f_throw angle_throw t_throw f_floor p step g (t+step) max
+    |otherwise = []
+
+--simulates all the Position from a arena got with a File
+simulatefromFile :: Ralf -> Double -> Double -> Double -> Double -> Double -> Double -> Double -> Double -> Double -> String -> Char -> Char -> IO [(Double,Double)]
+simulatefromFile ralf f_throw angle_throw t_throw f_floor p step g t max filePath divider0 divider1 = do
+    x <- fileto2dMaybe filePath divider0 divider1
+    return (simulatePosatShot ralf x f_throw angle_throw t_throw f_floor p step g t max)
+simulatefromFilev :: Ralf -> Double -> Double -> Double -> Double -> Double -> Double -> Double -> Double -> Double -> String -> Char -> Char -> IO [(Double,Double)]
+simulatefromFilev ralf f_throw angle_throw t_throw f_floor p step g t max filePath divider0 divider1 = do
+    x <- filetovectorList filePath divider0 divider1
+    return (simulatePosatShotv ralf x f_throw angle_throw t_throw f_floor p step g t max)
+
 --simulates the positions from a given data-file
 simulatefromFiles::String->Bool->IO [(Double,Double)]
 simulatefromFiles filePath_data vector = do
     content <- getdata "data.txt" ':'
+    let ralf = Ralf {
+        pos = g2OQ (showDataTuple content 8), 
+        m = (g1OQ (showDataTuple content 10)), 
+        v = (g2OQ (showDataTuple content 7)), 
+        a = (g1OQ (showDataTuple content 6)), 
+        cw = (g1OQ (showDataTuple content 4)), 
+        bouncefac = (g1OQ (showDataTuple content 17))}
     if vector
     then 
         simulatefromFilev
-            (g1OQ (showDataTuple content 0)) (g1OQ (showDataTuple content 1)) (g1OQ (showDataTuple content 2)) (g1OQ (showDataTuple content 3))
-            (g1OQ (showDataTuple content 4)) (g1OQ (showDataTuple content 5)) (g1OQ (showDataTuple content 6)) (g2OQ (showDataTuple content 7))
-            (g2OQ (showDataTuple content 8)) (g1OQ (showDataTuple content 9)) (g1OQ (showDataTuple content 10)) (g1OQ (showDataTuple content 11))
-            (g1OQ (showDataTuple content 12)) (g1OQ (showDataTuple content 13)) (g3OQ (showDataTuple content 14)) (g4OQ (showDataTuple content 15))
-            (g4OQ (showDataTuple content 16)) (g1OQ (showDataTuple content 17))
+            ralf (g1OQ (showDataTuple content 0)) (g1OQ (showDataTuple content 1)) (g1OQ (showDataTuple content 2)) (g1OQ (showDataTuple content 3))
+            (g1OQ (showDataTuple content 5)) (g1OQ (showDataTuple content 9)) (g1OQ (showDataTuple content 11)) (g1OQ (showDataTuple content 12)) 
+            (g1OQ (showDataTuple content 13)) (g3OQ (showDataTuple content 14)) (g4OQ (showDataTuple content 15)) (g4OQ (showDataTuple content 16))
     else
         simulatefromFile
-            (g1OQ (showDataTuple content 0)) (g1OQ (showDataTuple content 1)) (g1OQ (showDataTuple content 2)) (g1OQ (showDataTuple content 3))
-            (g1OQ (showDataTuple content 4)) (g1OQ (showDataTuple content 5)) (g1OQ (showDataTuple content 6)) (g2OQ (showDataTuple content 7))
-            (g2OQ (showDataTuple content 8)) (g1OQ (showDataTuple content 9)) (g1OQ (showDataTuple content 10)) (g1OQ (showDataTuple content 11))
-            (g1OQ (showDataTuple content 12)) (g1OQ (showDataTuple content 13)) (g3OQ (showDataTuple content 14)) (g4OQ (showDataTuple content 15))
-            (g4OQ (showDataTuple content 16)) (g1OQ (showDataTuple content 17))
+            ralf (g1OQ (showDataTuple content 0)) (g1OQ (showDataTuple content 1)) (g1OQ (showDataTuple content 2)) (g1OQ (showDataTuple content 3))
+            (g1OQ (showDataTuple content 5)) (g1OQ (showDataTuple content 9)) (g1OQ (showDataTuple content 11)) (g1OQ (showDataTuple content 12)) 
+            (g1OQ (showDataTuple content 13)) (g3OQ (showDataTuple content 14)) (g4OQ (showDataTuple content 15)) (g4OQ (showDataTuple content 16))
 
 --returns the List turned around
 turnListAround::[a]->[a]
@@ -474,12 +478,10 @@ afterDot::Double -> Double
 afterDot a = (-) a $ fromInteger $ floor a
 
 isonline::(Double,Double) -> (Double, Double) -> (Double, Double) -> Double -> Bool
-isonline a b p s = isonlinec (leftestpoint a b) (rightestpoint a b) p s (fst p - s)
---checks, wether it touches the vector orianted line (start line, end line, position of Ralf, size of Ralf, startx) - ax < bx
-isonlinec::(Double,Double) -> (Double, Double) -> (Double, Double) -> Double -> Double -> Bool
-isonlinec a b p s x | x > fst b || fst p + s < fst a || fst p - s > fst b || snd p + s < min (snd a) (snd b) || snd p - s > max (snd a) (snd b) || x > fst p + s = False
-                    |isinMiddle (snd p - s) (snd p + s) (getm a b * (x - fst a) + snd a) = True
-                    |otherwise = isonlinec a b p s (x + s / 10)
+isonline a b p s = isinMiddle (min (fst a) (fst b)) (max (fst a) (fst b)) (fst p) && getdistancetoLine (atan (getm (leftestpoint a b) (rightestpoint a b))) (fst (min a b)) (leftesty a b) (fst p) (snd p) <= s
+
+getdistancetoLine::Double -> Double -> Double -> Double -> Double -> Double
+getdistancetoLine a xg yg px py = sin (toRadian 90 - a) * (py - (tan a * (px - xg) + yg))
 
 isonsomelineandhow :: (Double,Double) -> [((Double,Double),(Double,Double))] -> Double -> (Bool, Double)
 isonsomelineandhow pos [] s = (False, 0)
