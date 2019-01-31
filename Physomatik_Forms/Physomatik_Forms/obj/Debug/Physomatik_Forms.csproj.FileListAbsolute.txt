@@ -7,3 +7,13 @@ c:\users\timo\documents\visual studio 2015\Projects\Physomatik_Forms\Physomatik_
 c:\users\timo\documents\visual studio 2015\Projects\Physomatik_Forms\Physomatik_Forms\obj\Debug\Physomatik_Forms.csproj.GenerateResource.Cache
 c:\users\timo\documents\visual studio 2015\Projects\Physomatik_Forms\Physomatik_Forms\obj\Debug\Physomatik_Forms.exe
 c:\users\timo\documents\visual studio 2015\Projects\Physomatik_Forms\Physomatik_Forms\obj\Debug\Physomatik_Forms.pdb
+C:\Users\MetaColon\Documents\Physomatik\Physomatik_Forms\Physomatik_Forms\bin\Debug\Physomatik_Forms.exe.config
+C:\Users\MetaColon\Documents\Physomatik\Physomatik_Forms\Physomatik_Forms\bin\Debug\Physomatik_Forms.exe
+C:\Users\MetaColon\Documents\Physomatik\Physomatik_Forms\Physomatik_Forms\bin\Debug\Physomatik_Forms.pdb
+C:\Users\MetaColon\Documents\Physomatik\Physomatik_Forms\Physomatik_Forms\obj\Debug\Physomatik_Forms.csprojAssemblyReference.cache
+C:\Users\MetaColon\Documents\Physomatik\Physomatik_Forms\Physomatik_Forms\obj\Debug\Physomatik_Forms.Form1.resources
+C:\Users\MetaColon\Documents\Physomatik\Physomatik_Forms\Physomatik_Forms\obj\Debug\Physomatik_Forms.Properties.Resources.resources
+C:\Users\MetaColon\Documents\Physomatik\Physomatik_Forms\Physomatik_Forms\obj\Debug\Physomatik_Forms.csproj.GenerateResource.cache
+C:\Users\MetaColon\Documents\Physomatik\Physomatik_Forms\Physomatik_Forms\obj\Debug\Physomatik_Forms.csproj.CoreCompileInputs.cache
+C:\Users\MetaColon\Documents\Physomatik\Physomatik_Forms\Physomatik_Forms\obj\Debug\Physomatik_Forms.exe
+C:\Users\MetaColon\Documents\Physomatik\Physomatik_Forms\Physomatik_Forms\obj\Debug\Physomatik_Forms.pdb
